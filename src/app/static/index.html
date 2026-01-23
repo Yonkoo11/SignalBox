@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SignalBox - Catch feedback that matters</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: #1a1a1a;
+            background: #fafafa;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Nav */
+        nav {
+            padding: 20px 0;
+            background: white;
+            border-bottom: 1px solid #eee;
+        }
+
+        nav .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1a1a;
+            text-decoration: none;
+        }
+
+        .logo span {
+            color: #2563eb;
+        }
+
+        .nav-links a {
+            margin-left: 32px;
+            text-decoration: none;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .nav-links a:hover {
+            color: #1a1a1a;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-outline {
+            border: 2px solid #2563eb;
+            color: #2563eb;
+        }
+
+        .btn-outline:hover {
+            background: #2563eb;
+            color: white;
+        }
+
+        /* Hero */
+        .hero {
+            padding: 80px 0;
+            text-align: center;
+            background: white;
+        }
+
+        .hero h1 {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 20px;
+            color: #666;
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .hero-note {
+            margin-top: 16px;
+            font-size: 14px;
+            color: #999;
+        }
+
+        /* Problem */
+        .problem {
+            padding: 80px 0;
+            background: #f5f5f5;
+        }
+
+        .problem h2 {
+            font-size: 32px;
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .problem-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 32px;
+        }
+
+        .problem-card {
+            background: white;
+            padding: 32px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .problem-card h3 {
+            font-size: 20px;
+            margin-bottom: 12px;
+        }
+
+        .problem-card p {
+            color: #666;
+        }
+
+        /* How it works */
+        .how {
+            padding: 80px 0;
+            background: white;
+        }
+
+        .how h2 {
+            font-size: 32px;
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+        }
+
+        .step {
+            text-align: center;
+        }
+
+        .step-number {
+            width: 48px;
+            height: 48px;
+            background: #2563eb;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0 auto 16px;
+        }
+
+        .step h3 {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .step p {
+            color: #666;
+            font-size: 15px;
+        }
+
+        /* Features */
+        .features {
+            padding: 80px 0;
+            background: #f5f5f5;
+        }
+
+        .features h2 {
+            font-size: 32px;
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        .feature {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+        }
+
+        .feature h3 {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .feature p {
+            color: #666;
+            font-size: 15px;
+        }
+
+        /* Pricing */
+        .pricing {
+            padding: 80px 0;
+            background: white;
+        }
+
+        .pricing h2 {
+            font-size: 32px;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .pricing-subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 48px;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 32px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .price-card {
+            border: 2px solid #eee;
+            border-radius: 16px;
+            padding: 32px;
+        }
+
+        .price-card.featured {
+            border-color: #2563eb;
+            position: relative;
+        }
+
+        .price-card.featured::before {
+            content: 'Popular';
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2563eb;
+            color: white;
+            padding: 4px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .price-card h3 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .price {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .price span {
+            font-size: 16px;
+            font-weight: 400;
+            color: #666;
+        }
+
+        .price-card ul {
+            list-style: none;
+            margin: 24px 0;
+        }
+
+        .price-card li {
+            padding: 8px 0;
+            color: #666;
+        }
+
+        .price-card li::before {
+            content: '✓';
+            color: #22c55e;
+            margin-right: 8px;
+            font-weight: 700;
+        }
+
+        /* CTA */
+        .cta {
+            padding: 80px 0;
+            background: #1a1a1a;
+            text-align: center;
+        }
+
+        .cta h2 {
+            font-size: 32px;
+            color: white;
+            margin-bottom: 16px;
+        }
+
+        .cta p {
+            color: #999;
+            margin-bottom: 32px;
+        }
+
+        /* Footer */
+        footer {
+            padding: 40px 0;
+            background: #111;
+            color: #666;
+            text-align: center;
+        }
+
+        footer a {
+            color: #999;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            color: white;
+        }
+
+        /* Tags demo */
+        .tags-demo {
+            background: #1a1a1a;
+            color: #fff;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-family: monospace;
+            font-size: 14px;
+            margin: 32px auto;
+            max-width: 500px;
+            text-align: left;
+        }
+
+        .tag {
+            color: #60a5fa;
+        }
+
+        .handle {
+            color: #34d399;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 32px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="container">
+            <a href="/" class="logo">Signal<span>Box</span></a>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#pricing">Pricing</a>
+                <a href="/api/auth/login" class="btn btn-primary">Get Started</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container">
+            <h1>Your users are talking.<br>Make sure you hear them.</h1>
+            <p>SignalBox monitors X for mentions of your product and delivers actionable feedback straight to your inbox. No more missed bugs, complaints, or feature requests.</p>
+            <div class="hero-cta">
+                <a href="/api/auth/login" class="btn btn-primary">Start Free</a>
+                <a href="#how" class="btn btn-outline">See How It Works</a>
+            </div>
+            <p class="hero-note">Free forever. No credit card required.</p>
+        </div>
+    </section>
+
+    <section class="problem">
+        <div class="container">
+            <h2>The feedback void is real</h2>
+            <div class="problem-grid">
+                <div class="problem-card">
+                    <h3>Feedback gets lost</h3>
+                    <p>Users tweet about bugs and issues, but you never see it. By the time you find out, they've already churned.</p>
+                </div>
+                <div class="problem-card">
+                    <h3>Manual monitoring doesn't scale</h3>
+                    <p>Searching X every day is tedious. You miss things, get distracted, and eventually stop checking.</p>
+                </div>
+                <div class="problem-card">
+                    <h3>Existing tools are overkill</h3>
+                    <p>Enterprise social listening tools cost thousands and require training. You just want to catch feedback.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="how" id="how">
+        <div class="container">
+            <h2>Three ways to catch feedback</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>Passive Monitoring</h3>
+                    <p>We watch for @mentions of your product automatically. No action needed from users.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>Bot Tags</h3>
+                    <p>Users tag @SignalBoxHQ + @yourproduct for direct feedback routing.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>$ Signals</h3>
+                    <p>Users add $bug, $feature, or $feedback to categorize their message instantly.</p>
+                </div>
+            </div>
+            <div class="tags-demo">
+                <span class="handle">@SignalBoxHQ</span> <span class="handle">@yourapp</span> The export button crashes on Safari <span class="tag">$bug</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="features" id="features">
+        <div class="container">
+            <h2>Everything you need</h2>
+            <div class="feature-grid">
+                <div class="feature">
+                    <h3>Smart Inbox</h3>
+                    <p>All feedback in one place, sorted by priority. Filter by type, sentiment, or engagement.</p>
+                </div>
+                <div class="feature">
+                    <h3>AI Classification</h3>
+                    <p>Automatically categorize feedback as bugs, complaints, feature requests, questions, or praise.</p>
+                </div>
+                <div class="feature">
+                    <h3>Telegram Alerts</h3>
+                    <p>Get instant notifications for high-priority feedback. Never miss a critical issue.</p>
+                </div>
+                <div class="feature">
+                    <h3>Response Templates</h3>
+                    <p>Reply quickly with pre-written responses for common feedback types.</p>
+                </div>
+                <div class="feature">
+                    <h3>Priority Scoring</h3>
+                    <p>We rank feedback by author reach, engagement, and urgency so you focus on what matters.</p>
+                </div>
+                <div class="feature">
+                    <h3>One-Click Actions</h3>
+                    <p>Mark as handled, hide noise, or jump to the original tweet in one click.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="pricing" id="pricing">
+        <div class="container">
+            <h2>Simple pricing</h2>
+            <p class="pricing-subtitle">Start free, upgrade when you need more</p>
+            <div class="pricing-grid">
+                <div class="price-card">
+                    <h3>Free</h3>
+                    <div class="price">$0<span>/month</span></div>
+                    <ul>
+                        <li>Unlimited feedback collection</li>
+                        <li>Keyword classification</li>
+                        <li>3 response templates</li>
+                        <li>30-day data retention</li>
+                    </ul>
+                    <a href="/api/auth/login" class="btn btn-outline" style="width: 100%; text-align: center;">Get Started</a>
+                </div>
+                <div class="price-card featured">
+                    <h3>Pro</h3>
+                    <div class="price">$29<span>/month</span></div>
+                    <ul>
+                        <li>Everything in Free</li>
+                        <li>AI-powered classification</li>
+                        <li>AI summaries</li>
+                        <li>Telegram alerts</li>
+                        <li>Unlimited templates</li>
+                        <li>1-year data retention</li>
+                    </ul>
+                    <a href="/api/auth/login" class="btn btn-primary" style="width: 100%; text-align: center;">Start 14-Day Trial</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta">
+        <div class="container">
+            <h2>Stop missing feedback</h2>
+            <p>Join product teams who actually hear their users.</p>
+            <a href="/api/auth/login" class="btn btn-primary">Get Started Free</a>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 SignalBox. <a href="mailto:support@signalbox.app">Contact</a></p>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,65 @@
+# Render Blueprint
+# Deploy with: render blueprint apply
+
+services:
+  # Main API + Telegram bot
+  - type: web
+    name: signalbox-api
+    runtime: python
+    region: oregon
+    plan: starter
+    buildCommand: pip install -r src/requirements.txt
+    startCommand: cd src && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: APP_URL
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: signalbox-db
+          property: connectionString
+      - key: X_CLIENT_ID
+        sync: false
+      - key: X_CLIENT_SECRET
+        sync: false
+      - key: X_BOT_BEARER_TOKEN
+        sync: false
+      - key: X_BOT_ACCESS_TOKEN
+        sync: false
+      - key: X_BOT_ACCESS_TOKEN_SECRET
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: CLAUDE_API_KEY
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_PRICE_ID
+        sync: false
+      - key: ENCRYPTION_KEY
+        generateValue: true
+
+  # Streamlit Dashboard
+  - type: web
+    name: signalbox-dashboard
+    runtime: python
+    region: oregon
+    plan: starter
+    buildCommand: pip install -r src/requirements.txt
+    startCommand: cd src && streamlit run dashboard/app.py --server.port $PORT --server.address 0.0.0.0
+    envVars:
+      - key: API_URL
+        fromService:
+          name: signalbox-api
+          type: web
+          property: host
+
+databases:
+  - name: signalbox-db
+    plan: starter
+    region: oregon
+    postgresMajorVersion: 15
