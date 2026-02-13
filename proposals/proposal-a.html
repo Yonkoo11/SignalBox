@@ -1370,7 +1370,7 @@ body::before {
 
         <div class="pipeline-actions">
             <button class="run-pipeline-btn" onclick="triggerPipeline()">$ run-pipeline</button>
-            <a href="https://sepolia.etherscan.io/address/0x8e39B7A3c2E4c7431C0e39bE3AcE" target="_blank" rel="noopener" class="view-contract-link">View Contract</a>
+            <a href="https://sepolia.etherscan.io/address/0xcA374e8bba8bd2BA0Aed26c4d425aA9aa7E058D0" target="_blank" rel="noopener" class="view-contract-link">View Contract</a>
         </div>
     </section>
 
@@ -1381,7 +1381,7 @@ body::before {
             <div class="oracle-grid" id="oracleGrid">
                 <div class="oracle-row">
                     <span class="oracle-key">Contract</span>
-                    <span class="oracle-value"><span id="oracleContract">0x8e39...3AcE</span><button class="copy-btn" onclick="copyText('0x8e39B7A3c2E4c7431C0e39bE3AcE')" aria-label="Copy contract address">&#9776;</button></span>
+                    <span class="oracle-value"><span id="oracleContract">0xcA37...58D0</span><button class="copy-btn" onclick="copyText('0xcA374e8bba8bd2BA0Aed26c4d425aA9aa7E058D0')" aria-label="Copy contract address">&#9776;</button></span>
                 </div>
                 <div class="oracle-row">
                     <span class="oracle-key">Network</span>
@@ -1408,7 +1408,7 @@ body::before {
                     <span class="oracle-value" id="oracleSubmissions">47</span>
                 </div>
             </div>
-            <a href="https://sepolia.etherscan.io/address/0x8e39B7A3c2E4c7431C0e39bE3AcE" target="_blank" rel="noopener" class="oracle-etherscan">View on Etherscan &#8599;</a>
+            <a href="https://sepolia.etherscan.io/address/0xcA374e8bba8bd2BA0Aed26c4d425aA9aa7E058D0" target="_blank" rel="noopener" class="oracle-etherscan">View on Etherscan &#8599;</a>
         </div>
     </section>
 
@@ -2041,7 +2041,7 @@ const commands = [
     { group: 'Navigation', label: 'Go to Oracle', action: () => scrollToZone('zone-oracle'), icon: '\u26D3' },
     { group: 'Actions', label: 'Refresh Data', action: () => { togglePalette(); loadAllData(); }, icon: '\u21BB' },
     { group: 'Actions', label: 'Trigger Pipeline', action: () => { togglePalette(); triggerPipeline(); }, icon: '$' },
-    { group: 'Actions', label: 'Copy Contract Address', action: () => { copyText('0x8e39B7A3c2E4c7431C0e39bE3AcE'); togglePalette(); }, icon: '\u2398' },
+    { group: 'Actions', label: 'Copy Contract Address', action: () => { copyText('0xcA374e8bba8bd2BA0Aed26c4d425aA9aa7E058D0'); togglePalette(); }, icon: '\u2398' },
 ];
 
 function getProjectCommands() {

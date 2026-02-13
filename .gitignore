@@ -42,3 +42,11 @@ htmlcov/
 
 # CRE build artifacts
 workflow/tmp.*
+
+# Foundry build artifacts and dependencies
+contracts/out/
+contracts/cache/
+contracts/lib/
+
+# AI working files (not part of deliverable)
+ai/plan.md

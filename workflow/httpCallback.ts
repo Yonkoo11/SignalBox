@@ -12,7 +12,12 @@ import {
   type HTTPSendRequester,
 } from "@chainlink/cre-sdk";
 import { encodeAbiParameters, parseAbiParameters } from "viem";
-import { scoreSentiment, type SentimentScore } from "./claude";
+import {
+  classifyFeedback,
+  aggregateSentiment,
+  type SentimentScore,
+  type ClassificationResult,
+} from "./claude";
 
 type Config = {
   signalboxApiUrl: string;
@@ -45,6 +50,9 @@ interface SignalBoxResponse {
     category: string;
     priority: string;
     engagement: number;
+    author: string;
+    followers: number;
+    timestamp: string;
   }>;
 }
 
@@ -54,11 +62,15 @@ const REPORT_PARAMS = parseAbiParameters(
 );
 
 export function onHttpTrigger(runtime: Runtime<Config>, payload: HTTPPayload): string {
-  runtime.log("=== SignalBox Sentiment Oracle: HTTP Trigger ===");
+  runtime.log("=== SignalBox Sentiment Oracle v2: HTTP Trigger ===");
 
   try {
-    // Parse optional project filter from trigger payload
-    let targetProjects = runtime.config.projects;
+    // Parse project from trigger payload.
+    // CRE has a per-workflow HTTP call limit (5 in simulator). The v2 pipeline uses
+    // 3 HTTP calls per project (fetch + classify + aggregate) + 1 for getSecret + 1 for writeReport,
+    // so we process ONE project per invocation. For multi-project updates,
+    // trigger the workflow once per project.
+    let targetProjects = runtime.config.projects.slice(0, 1); // default: first project
     if (payload.input && payload.input.length > 0) {
       const input = decodeJson(payload.input) as TriggerPayload;
       if (input.project) {
@@ -66,44 +78,74 @@ export function onHttpTrigger(runtime: Runtime<Config>, payload: HTTPPayload): s
       }
     }
 
-    runtime.log(`[Step 1] Updating sentiment for: ${targetProjects.join(", ")}`);
+    runtime.log(`[Step 1] Fetching data for: ${targetProjects.join(", ")}`);
+    runtime.log(`[Config] Writing to ${runtime.config.evms.length} chain(s)`);
 
-    const evmConfig = runtime.config.evms[0];
-    const network = getNetwork({
-      chainFamily: "evm",
-      chainSelectorName: evmConfig.chainSelectorName,
-      isTestnet: true,
+    // Pre-build EVM clients for all configured chains
+    const evmClients = runtime.config.evms.map((evm) => {
+      const network = getNetwork({
+        chainFamily: "evm",
+        chainSelectorName: evm.chainSelectorName,
+        isTestnet: true,
+      });
+      if (!network) {
+        throw new Error(`Unknown chain: ${evm.chainSelectorName}`);
+      }
+      return {
+        config: evm,
+        client: new cre.capabilities.EVMClient(network.chainSelector.selector),
+        chainName: evm.chainSelectorName,
+      };
     });
 
-    if (!network) {
-      throw new Error(`Unknown chain: ${evmConfig.chainSelectorName}`);
-    }
-
-    const evmClient = new cre.capabilities.EVMClient(network.chainSelector.selector);
     const results: string[] = [];
 
     for (const project of targetProjects) {
       try {
         runtime.log(`\n--- Processing: ${project} ---`);
 
-        // Step 2: Fetch sentiment data from SignalBox API
-        runtime.log("[Step 2] Fetching from SignalBox API...");
+        // Step 1: Fetch raw feedback from SignalBox API
+        runtime.log("[Step 1] Fetching from SignalBox API...");
         const feedbackData = fetchSentiment(runtime, project);
 
         if (feedbackData.total_mentions === 0) {
-          runtime.log(`[Step 2] No mentions for ${project}, skipping`);
+          runtime.log(`[Step 1] No mentions for ${project}, skipping`);
           continue;
         }
 
-        runtime.log(`[Step 2] Got ${feedbackData.total_mentions} mentions`);
+        runtime.log(`[Step 1] Got ${feedbackData.total_mentions} mentions`);
 
-        // Step 3: Score with Claude AI
-        runtime.log("[Step 3] Scoring with Claude AI...");
-        const feedbackJson = JSON.stringify(feedbackData.items.slice(0, 20));
-        const score = scoreSentiment(runtime, project, feedbackJson);
+        // Step 2: AI Classification — classify each feedback item
+        runtime.log("[Step 2] Classifying feedback with Claude AI...");
+        const rawItemsJson = JSON.stringify(
+          feedbackData.items.slice(0, 20).map((item) => ({
+            text: item.text,
+            engagement: item.engagement,
+            author: item.author,
+            followers: item.followers,
+          }))
+        );
+        const classified: ClassificationResult = classifyFeedback(runtime, project, rawItemsJson);
 
-        // Step 4: Encode and write on-chain
-        runtime.log("[Step 4] Writing to SentimentOracle contract...");
+        // Log classification breakdown
+        const catCounts: Record<string, number> = {};
+        for (const item of classified.items) {
+          catCounts[item.category] = (catCounts[item.category] || 0) + 1;
+        }
+        runtime.log(`[Step 2] Classification: ${JSON.stringify(catCounts)}`);
+
+        // Step 3: AI Aggregation + Risk Assessment
+        runtime.log("[Step 3] Aggregating sentiment + risk assessment...");
+        const classifiedJson = JSON.stringify(classified.items);
+        const score: SentimentScore = aggregateSentiment(runtime, project, classifiedJson);
+
+        // Step 4: Conditional logging (risk detection is also in the contract)
+        if (score.riskFlag) {
+          runtime.log(`[Step 4] RISK FLAG for ${project}: score=${score.score}, top issues: ${score.topIssues.join("; ")}`);
+        }
+
+        // Step 5: Encode and write on-chain (all configured chains)
+        runtime.log(`[Step 5] Writing to ${evmClients.length} chain(s)...`);
 
         const reportData = encodeAbiParameters(REPORT_PARAMS, [
           project,
@@ -124,24 +166,34 @@ export function onHttpTrigger(runtime: Runtime<Config>, payload: HTTPPayload): s
           })
           .result();
 
-        const writeResult = evmClient
-          .writeReport(runtime, {
-            receiver: evmConfig.oracleAddress,
-            report: reportResponse,
-            gasConfig: {
-              gasLimit: evmConfig.gasLimit,
-            },
-          })
-          .result();
+        const txHashes: string[] = [];
+        for (const evm of evmClients) {
+          try {
+            const writeResult = evm.client
+              .writeReport(runtime, {
+                receiver: evm.config.oracleAddress,
+                report: reportResponse,
+                gasConfig: {
+                  gasLimit: evm.config.gasLimit,
+                },
+              })
+              .result();
 
-        if (writeResult.txStatus === TxStatus.SUCCESS) {
-          const txHash = bytesToHex(writeResult.txHash || new Uint8Array(32));
-          runtime.log(`[Step 4] ${project}: score=${score.score} tx=${txHash}`);
-          results.push(`${project}:${score.score}:${txHash}`);
-        } else {
-          runtime.log(`[Step 4] ${project}: tx failed (${writeResult.txStatus})`);
-          results.push(`${project}:FAILED`);
+            if (writeResult.txStatus === TxStatus.SUCCESS) {
+              const txHash = bytesToHex(writeResult.txHash || new Uint8Array(32));
+              runtime.log(`[Step 5] ${project} -> ${evm.chainName}: tx=${txHash}`);
+              txHashes.push(txHash);
+            } else {
+              runtime.log(`[Step 5] ${project} -> ${evm.chainName}: tx failed (${writeResult.txStatus})`);
+            }
+          } catch (chainErr) {
+            const msg = chainErr instanceof Error ? chainErr.message : String(chainErr);
+            runtime.log(`[Step 5] ${project} -> ${evm.chainName}: error: ${msg}`);
+          }
         }
+
+        runtime.log(`[Step 5] ${project}: score=${score.score} risk=${score.riskFlag} chains=${txHashes.length}/${evmClients.length}`);
+        results.push(`${project}:${score.score}:risk=${score.riskFlag}:chains=${txHashes.length}`);
       } catch (projectErr) {
         const msg = projectErr instanceof Error ? projectErr.message : String(projectErr);
         runtime.log(`[ERROR] ${project} failed: ${msg}`);
@@ -149,7 +201,7 @@ export function onHttpTrigger(runtime: Runtime<Config>, payload: HTTPPayload): s
       }
     }
 
-    runtime.log("\n=== Sentiment Oracle Update Complete ===");
+    runtime.log("\n=== Sentiment Oracle v2 Update Complete ===");
     return results.join("|");
 
   } catch (err) {

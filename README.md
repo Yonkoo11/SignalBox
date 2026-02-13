@@ -2,9 +2,9 @@
 
 **Chainlink price feeds, but for community sentiment.**
 
-SignalBox monitors Twitter/X for mentions of crypto projects, scores sentiment using Claude AI, and publishes verified scores on-chain via Chainlink CRE. DAOs, prediction markets, and DeFi protocols can consume this data to make decisions based on real community signal.
+SignalBox aggregates Twitter/X feedback about crypto projects, classifies each item using AI, assesses risk, and publishes verified sentiment scores on-chain via Chainlink CRE. DAOs, prediction markets, and DeFi protocols can consume this data for governance, risk management, and community-driven decisions.
 
-**Chainlink Convergence Hackathon | CRE & AI Track**
+**Chainlink Convergence Hackathon 2026 | CRE & AI Track**
 
 ## How It Works
 
@@ -13,23 +13,24 @@ Twitter/X mentions
        |
        v
   SignalBox API (FastAPI)
-  Collects, classifies, aggregates
+  Collects and aggregates community feedback
        |
        v
   /api/v1/sentiment/{project}
        |
        v
-  Chainlink CRE Workflow (TypeScript)
-  +------------------------------------+
-  | 1. HTTP Fetch    - Pull sentiment  |
-  | 2. Claude AI     - Score 0-100     |
-  | 3. DON Consensus - Nodes agree     |
-  | 4. Write EVM     - Publish score   |
-  +------------------------------------+
+  Chainlink CRE Workflow v2 (TypeScript)
+  +-----------------------------------------------+
+  | 1. HTTP Fetch     - Pull aggregated feedback   |
+  | 2. AI Classify    - Category, priority, bot %  |
+  | 3. AI Aggregate   - Score, summary, risk flag  |
+  | 4. Risk Check     - Conditional risk alerting  |
+  | 5. Write EVM      - Publish verified report    |
+  +-----------------------------------------------+
        |
        v
-  SentimentOracle.sol (Sepolia)
-  On-chain sentiment feed
+  SentimentOracle.sol (Sepolia + Base Sepolia)
+  Cross-chain sentiment feed + risk alerts
        |
        v
   Any protocol can read:
@@ -38,41 +39,61 @@ Twitter/X mentions
 
 ## Live Demo
 
-- **Contract**: [`0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE`](https://sepolia.etherscan.io/address/0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE) (Sepolia)
-- **E2E Transaction**: [`0xdb3d2cf8...`](https://sepolia.etherscan.io/tx/0xdb3d2cf8213f0f33e85ac6073b17422ffc2743ae94c18287e5dda3d967d9fb1b)
-- **On-chain Score**: 82/100 for Chainlink (verified via `cast call`)
+- **Sepolia Contract**: [`0xcA374e8bba8bd2BA0Aed26c4d425aA9aa7E058D0`](https://sepolia.etherscan.io/address/0xcA374e8bba8bd2BA0Aed26c4d425aA9aa7E058D0)
+- **Base Sepolia Contract**: [`0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE`](https://sepolia.basescan.org/address/0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE)
+- **E2E Transaction**: [`0x059d6b48...`](https://sepolia.etherscan.io/tx/0x059d6b487d511ab95f5d49806507b9b987219df99af6fe292924b2d9b50cd175)
+- **On-chain Score**: 82/100 for Chainlink on both chains (verified via `cast call`)
 - **Dashboard**: Run locally at `http://localhost:8000/dashboard`
 
 ## What Makes This Different
 
-Most oracles deliver price data. SignalBox delivers **sentiment data** -- a novel oracle type that captures what the community actually thinks about a project. This opens up use cases that price feeds can't address:
+Most oracles deliver price data. SignalBox delivers **sentiment data** -- a novel oracle type that captures what the community actually thinks about a project. This enables use cases that price feeds can't address:
 
 - **DAO governance**: Weight proposals by community sentiment
 - **Prediction markets**: Trade on social consensus shifts
 - **Risk assessment**: Detect community frustration before it becomes a sell event
 - **Protocol health**: Monitor bug reports and complaints in real-time
 
-## CRE Workflow
+## CRE Workflow (v2)
 
-The CRE workflow (`workflow/`) runs on Chainlink's Decentralized Oracle Network:
+The CRE workflow (`workflow/`) uses a multi-step AI pipeline that runs on Chainlink's Decentralized Oracle Network:
 
-1. **HTTP Trigger** -- on-demand or scheduled
-2. **Fetch** -- pulls aggregated feedback from the SignalBox API
-3. **AI Score** -- sends feedback to Claude AI via CRE's HTTP capability, gets a sentiment score (0-100), breakdown (positive/negative/neutral), and a natural language summary
-4. **DON Consensus** -- CRE nodes reach agreement on the score using `consensusIdenticalAggregation`
+1. **HTTP Fetch** -- pulls aggregated community feedback from the SignalBox API
+2. **AI Classification** (Claude) -- classifies each feedback item individually:
+   - Category: `bug`, `feature_request`, `complaint`, `praise`, `question`
+   - Priority: `high`, `medium`, `low`
+   - Bot probability: 0-100 (filters spam/bots from scoring)
+3. **AI Aggregation + Risk Assessment** (Claude) -- second AI call on classified data:
+   - Overall sentiment score (0-100)
+   - Natural language summary
+   - Top 3 issues by engagement
+   - Risk flag (score < 40, majority negative, or high-priority bugs)
+4. **Conditional Risk** -- logs risk alerts when flagged (contract also detects score drops >= 15 points)
 5. **Write EVM** -- publishes the verified report to `SentimentOracle.sol` via `writeReport`
 
-The workflow handles multiple projects in a single run, with per-project error isolation so one failure doesn't affect others.
+The two-step AI approach (classify then aggregate) produces better scores than a single call because the aggregation model works on structured, classified data instead of raw text.
 
 ### Workflow Files
 
 | File | Purpose |
 |------|---------|
 | `workflow/main.ts` | Entry point, registers HTTP trigger |
-| `workflow/httpCallback.ts` | Core pipeline: fetch -> score -> write |
-| `workflow/claude.ts` | Claude AI integration with input validation |
+| `workflow/httpCallback.ts` | 5-step pipeline: fetch -> classify -> aggregate -> risk -> write |
+| `workflow/claude.ts` | Two AI functions: `classifyFeedback` + `aggregateSentiment` |
 | `workflow/workflow.yaml` | CRE staging/production config |
 | `workflow/config.staging.json` | Chain config, contract address, API URL |
+
+### CRE Capabilities Used
+
+| Capability | How Used |
+|------------|----------|
+| HTTPClient | Fetch social data from SignalBox API |
+| HTTPClient | Call Claude API for classification (step 2) |
+| HTTPClient | Call Claude API for aggregation (step 3) |
+| EVMClient | Write sentiment reports on-chain |
+| Runtime.report() | ABI-encode reports for on-chain consumption |
+| Runtime.getSecret() | Securely access API keys |
+| consensusIdenticalAggregation | DON consensus on HTTP responses |
 
 ## Smart Contract
 
@@ -89,10 +110,14 @@ The workflow handles multiple projects in a single run, with per-project error i
 - `getSentiment(project)` -- latest data
 - `getHistory(project, count)` -- historical scores
 - `getTrackedProjects()` -- all monitored projects
+- `getHistoryLength(project)` -- number of historical entries
 
 **Events:**
-- `SentimentUpdated(project, score, totalMentions, summary, timestamp)`
-- `ProjectAdded(project)`
+- `SentimentUpdated(project, score, totalMentions, summary, timestamp)` -- every update
+- `ProjectAdded(project)` -- new project tracked
+- `RiskAlert(project, previousScore, newScore, dropSize, timestamp)` -- score drop >= 15 points
+
+**Risk Detection:** The contract tracks previous scores per project. When a new report shows a drop of 15+ points, it emits `RiskAlert` -- enabling on-chain alerting systems to react to sudden sentiment crashes.
 
 ## Running Locally
 
@@ -109,20 +134,19 @@ The workflow handles multiple projects in a single run, with per-project error i
 ```bash
 cd contracts
 forge build
-forge test  # 5 tests, all passing
+forge test  # 8 tests, all passing
 ```
 
-### 2. API Server (demo mode)
+### 2. API Server (staging mode)
 
 ```bash
-# Uses test_server.py (no database needed)
-python -m venv .venv
-source .venv/bin/activate
 pip install fastapi uvicorn
 python test_server.py
 # API: http://localhost:8000
 # Dashboard: http://localhost:8000/dashboard
 ```
+
+The staging server serves curated demo data with realistic timestamps, category breakdowns, and AI summaries for 5 monitored projects. All responses include `"mode": "staging"` to indicate demo data.
 
 ### 3. CRE Workflow Simulation
 
@@ -131,21 +155,33 @@ cd workflow
 cp ../.env.example ../.env
 # Set ANTHROPIC_API_KEY and CRE_ETH_PRIVATE_KEY in .env
 
-# Simulate (dry run)
-cre workflow simulate .
+# Run for a specific project (recommended: one project per invocation)
+cre workflow simulate . -T staging-settings --broadcast \
+  --non-interactive --trigger-index 0 --http-payload '{"project":"chainlink"}'
 
-# Simulate with on-chain broadcast
-cre workflow simulate . --broadcast
+# Run all 5 projects
+for p in chainlink uniswap aave base arbitrum; do
+  cre workflow simulate . -T staging-settings --broadcast \
+    --non-interactive --trigger-index 0 --http-payload "{\"project\":\"$p\"}"
+done
 ```
+
+> **Note:** The v2 pipeline uses 3 HTTP calls per project (fetch + classify + aggregate). CRE enforces a per-workflow HTTP call limit, so each invocation processes one project. For multi-project updates, trigger once per project.
 
 ### 4. Verify On-Chain
 
 ```bash
-cast call 0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE \
-  "getSentiment(string)(uint8,uint32,uint32,uint32,uint32,string,uint256)" \
+# Sepolia
+cast call 0xcA374e8bba8bd2BA0Aed26c4d425aA9aa7E058D0 \
+  "getSentiment(string)((uint8,uint32,uint32,uint32,uint32,string,uint256))" \
   "chainlink" \
-  --rpc-url https://ethereum-sepolia-rpc.publicnode.com
-# Returns: 82, 8, 5, 2, 1, "Chainlink community sentiment is strongly positive...", 1739...
+  --rpc-url https://1rpc.io/sepolia
+
+# Base Sepolia
+cast call 0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE \
+  "getSentiment(string)((uint8,uint32,uint32,uint32,uint32,string,uint256))" \
+  "chainlink" \
+  --rpc-url https://base-sepolia-rpc.publicnode.com
 ```
 
 ## Tech Stack
@@ -155,9 +191,9 @@ cast call 0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE \
 | API Server | Python, FastAPI |
 | CRE Workflow | TypeScript, Chainlink CRE SDK v1.0.9 |
 | Smart Contract | Solidity ^0.8.24, Foundry |
-| AI Scoring | Claude Haiku 4.5 (via CRE HTTP) |
-| AI Classification | Claude Haiku (in SignalBox API) |
-| Testnet | Ethereum Sepolia |
+| AI Classification | Claude Haiku 4.5 (step 2: classify items) |
+| AI Aggregation | Claude Haiku 4.5 (step 3: score + risk) |
+| Testnets | Ethereum Sepolia, Base Sepolia |
 | ABI Encoding | viem (`encodeAbiParameters`) |
 | Contract Base | CRE ReceiverTemplate, OpenZeppelin v5.5 |
 
@@ -166,19 +202,20 @@ cast call 0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE \
 ```
 SignalBox/
 +-- contracts/
-|   +-- src/SentimentOracle.sol     # On-chain oracle contract
-|   +-- test/SentimentOracle.t.sol  # Foundry tests
+|   +-- src/SentimentOracle.sol     # On-chain oracle with RiskAlert
+|   +-- test/SentimentOracle.t.sol  # 8 Foundry tests
 |   +-- script/Deploy.s.sol         # Deployment script
 +-- workflow/
 |   +-- main.ts                     # CRE entry point
-|   +-- httpCallback.ts             # Fetch -> AI -> Write pipeline
-|   +-- claude.ts                   # Claude AI scoring
+|   +-- httpCallback.ts             # 5-step pipeline orchestration
+|   +-- claude.ts                   # AI classify + aggregate functions
 |   +-- workflow.yaml               # CRE config
-|   +-- config.staging.json         # Deployment config
+|   +-- config.staging.json         # Chain + contract config
 +-- src/app/
-|   +-- routers/sentiment.py        # Sentiment API endpoints
-|   +-- static/dashboard.html       # Demo dashboard
-+-- test_server.py                  # Lightweight demo server
+|   +-- static/dashboard.html       # Demo dashboard (Mission Control design)
++-- proposals/
+|   +-- proposal-hybrid.html        # Selected redesign (long-scroll + slide-over)
++-- test_server.py                  # Staging API server (curated demo data)
 ```
 
 ## API Endpoints
@@ -191,8 +228,8 @@ Returns aggregated sentiment data for a project.
 {
   "project": "chainlink",
   "period": "1h",
+  "mode": "staging",
   "score": 82,
-  "is_demo": true,
   "total_mentions": 8,
   "breakdown": {
     "praise": 4,
@@ -201,32 +238,50 @@ Returns aggregated sentiment data for a project.
     "bug": 1,
     "complaint": 1
   },
+  "ai_summary": "Community sentiment for Chainlink is strongly positive at 82/100...",
+  "key_themes": ["CCIP adoption", "CRE developer experience", ...],
   "items": [...]
 }
 ```
 
-### `GET /api/v1/sentiment`
+### `GET /api/v1/sentiment` -- Lists all monitored projects
+### `GET /api/v1/history/{project}?days=7` -- Score history
+### `GET /api/v1/comparison` -- Ranked project comparison
+### `GET /api/v1/pipeline/runs` -- Recent CRE workflow runs
+### `GET /api/v1/pipeline/status` -- Pipeline health + next run timer
 
-Lists all monitored projects.
+## E2E Test Results (v2 Workflow)
 
-## E2E Test Results
-
-Full pipeline executed successfully:
+Full multi-step pipeline executed successfully:
 
 ```
-=== SignalBox Sentiment Oracle: HTTP Trigger ===
-[Step 1] Updating sentiment for: chainlink
-[Step 2] Got 8 mentions
-[Step 3] Claude AI score: 82/100
-[Step 4] chainlink: score=82 tx=0xdb3d2cf8...
-=== Sentiment Oracle Update Complete ===
+=== SignalBox Sentiment Oracle v2: HTTP Trigger ===
+[Step 1] Fetching data for: chainlink
+[Step 1] Got 8 mentions
+[Step 2] Classifying feedback with Claude AI...
+[Step 2] Classification: {"praise":4,"feature_request":1,"complaint":1,"question":1,"bug":1}
+[Step 3] Aggregating sentiment + risk assessment...
+[Step 3] Score: 82/100 | +5 -1 ~1 | risk=false
+[Step 3] Top issues: CRE simulate error on M1 Mac; Documentation clarity needed; Solana support request
+[Step 5] chainlink: score=82 risk=false tx=0x059d6b48...
+=== Sentiment Oracle v2 Update Complete ===
 ```
 
 On-chain data verified:
 - Score: 82
 - Total Mentions: 8
-- Positive: 5, Negative: 2, Neutral: 1
+- Positive: 5, Negative: 1, Neutral: 1
 - Summary: "Chainlink community sentiment is strongly positive..."
+- Risk Flag: false (no alert emitted)
+
+## Data Source Strategy
+
+**Hackathon (current):** Curated staging data that mirrors real social patterns. Responses labeled `"mode": "staging"` for transparency.
+
+**Production roadmap:**
+1. LunarCrush API ($30/month) -- aggregated social metrics for all crypto projects
+2. Reddit API (free) -- subreddit monitoring for technical discussions
+3. X API Basic ($100/month) -- direct tweet access when revenue justifies
 
 ## Built For
 

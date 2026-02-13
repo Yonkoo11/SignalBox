@@ -1442,7 +1442,7 @@ body::after {
         <hr class="hr">
 
         <div class="contract-badge" onclick="copyContract()" title="Click to copy">
-          0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE
+          0xcA374e8bba8bd2BA0Aed26c4d425aA9aa7E058D0
         </div>
       </div>
 
@@ -1533,7 +1533,7 @@ body::after {
         </div>
       </div>
       <div class="detail-project-name" id="detail-name">Chainlink</div>
-      <div class="detail-project-address">Contract: 0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE</div>
+      <div class="detail-project-address">Contract: 0xcA374e8bba8bd2BA0Aed26c4d425aA9aa7E058D0</div>
     </div>
 
     <div class="pull-quote">
@@ -1685,7 +1685,7 @@ body::after {
             </tr>
             <tr>
               <td>Contract</td>
-              <td class="mono" style="font-size:10px;word-break:break-all;">0x8e39...3AcE</td>
+              <td class="mono" style="font-size:10px;word-break:break-all;">0xcA37...58D0</td>
             </tr>
           </tbody>
         </table>
@@ -1856,7 +1856,7 @@ body::after {
           Contract Address
           <span class="form-label-sub">Sepolia deployment</span>
         </label>
-        <input type="text" class="form-input mono" value="0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE" readonly>
+        <input type="text" class="form-input mono" value="0xcA374e8bba8bd2BA0Aed26c4d425aA9aa7E058D0" readonly>
       </div>
 
       <div class="form-row">
@@ -2036,7 +2036,7 @@ body::after {
   <div class="footer-inner">
     <div class="footer-left">Inspired by: Swiss Design (proportions) + Financial Times (editorial authority)</div>
     <div class="footer-right">
-      <a href="https://sepolia.etherscan.io/address/0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE" target="_blank" rel="noopener">View on Etherscan</a>
+      <a href="https://sepolia.etherscan.io/address/0xcA374e8bba8bd2BA0Aed26c4d425aA9aa7E058D0" target="_blank" rel="noopener">View on Etherscan</a>
     </div>
   </div>
 </footer>
@@ -2190,12 +2190,12 @@ setInterval(updateDatelines, 60000);
 // COPY CONTRACT
 // ============================================================
 function copyContract() {
-  navigator.clipboard.writeText('0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE').then(() => {
+  navigator.clipboard.writeText('0xcA374e8bba8bd2BA0Aed26c4d425aA9aa7E058D0').then(() => {
     const badge = document.querySelector('.contract-badge');
     const original = badge.textContent;
     badge.textContent = 'Copied to clipboard';
     setTimeout(() => {
-      badge.innerHTML = '0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE';
+      badge.innerHTML = '0xcA374e8bba8bd2BA0Aed26c4d425aA9aa7E058D0';
     }, 1500);
   });
 }

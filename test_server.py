@@ -1,7 +1,8 @@
-"""Minimal test server for CRE workflow e2e testing.
-Serves demo sentiment data without needing the full app stack.
+"""SignalBox staging server with curated demo data.
+Serves realistic sentiment data for hackathon demo without needing live API keys.
 """
 import random
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from fastapi import FastAPI, Query
 from fastapi.staticfiles import StaticFiles
@@ -33,48 +34,53 @@ DEMO_TRENDS = {
     "arbitrum": [62, 60, 59, 57, 56, 59, 58],
 }
 
+def _ts(hours_ago: float) -> str:
+    """Generate ISO timestamp relative to now."""
+    dt = datetime.now(timezone.utc) - timedelta(hours=hours_ago)
+    return dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+
 DEMO_ITEMS = {
     "chainlink": [
-        {"text": "CCIP is a game changer for cross-chain. Finally a reliable bridge solution.", "category": "praise", "priority": "low", "engagement": 142, "author": "defi_dev", "followers": 8500},
-        {"text": "CRE workflows are so clean. Built my first oracle in 2 hours.", "category": "praise", "priority": "medium", "engagement": 89, "author": "web3builder", "followers": 3200},
-        {"text": "When will CRE support Solana? Need cross-chain sentiment there too.", "category": "feature_request", "priority": "high", "engagement": 67, "author": "sol_maxi", "followers": 12000},
-        {"text": "Price feeds saved my protocol from a flash loan attack last night.", "category": "praise", "priority": "high", "engagement": 234, "author": "security_chad", "followers": 15000},
-        {"text": "Docs for CRE workflow.yaml could be clearer on the secrets config.", "category": "complaint", "priority": "medium", "engagement": 23, "author": "newdev_123", "followers": 450},
-        {"text": "How do I set up a custom data feed with CRE? Any examples?", "category": "question", "priority": "medium", "engagement": 15, "author": "curious_dev", "followers": 900},
-        {"text": "The new Functions v2 is much faster than v1. Great improvement.", "category": "praise", "priority": "low", "engagement": 56, "author": "fn_user", "followers": 2100},
-        {"text": "Got a weird error with CRE simulate on M1 Mac. Anyone else?", "category": "bug", "priority": "high", "engagement": 31, "author": "mac_dev", "followers": 1800},
+        {"text": "CCIP is a game changer for cross-chain. Finally a reliable bridge solution.", "category": "praise", "priority": "low", "engagement": 142, "author": "defi_dev", "followers": 8500, "timestamp": _ts(0.3)},
+        {"text": "CRE workflows are so clean. Built my first oracle in 2 hours.", "category": "praise", "priority": "medium", "engagement": 89, "author": "web3builder", "followers": 3200, "timestamp": _ts(0.8)},
+        {"text": "When will CRE support Solana? Need cross-chain sentiment there too.", "category": "feature_request", "priority": "high", "engagement": 67, "author": "sol_maxi", "followers": 12000, "timestamp": _ts(1.2)},
+        {"text": "Price feeds saved my protocol from a flash loan attack last night.", "category": "praise", "priority": "high", "engagement": 234, "author": "security_chad", "followers": 15000, "timestamp": _ts(2.1)},
+        {"text": "Docs for CRE workflow.yaml could be clearer on the secrets config.", "category": "complaint", "priority": "medium", "engagement": 23, "author": "newdev_123", "followers": 450, "timestamp": _ts(3.5)},
+        {"text": "How do I set up a custom data feed with CRE? Any examples?", "category": "question", "priority": "medium", "engagement": 15, "author": "curious_dev", "followers": 900, "timestamp": _ts(4.0)},
+        {"text": "The new Functions v2 is much faster than v1. Great improvement.", "category": "praise", "priority": "low", "engagement": 56, "author": "fn_user", "followers": 2100, "timestamp": _ts(5.5)},
+        {"text": "Got a weird error with CRE simulate on M1 Mac. Anyone else?", "category": "bug", "priority": "high", "engagement": 31, "author": "mac_dev", "followers": 1800, "timestamp": _ts(6.2)},
     ],
     "uniswap": [
-        {"text": "V4 hooks are going to unlock insane customization for pools.", "category": "praise", "priority": "medium", "engagement": 312, "author": "defi_whale", "followers": 25000},
-        {"text": "Gas fees on mainnet are still brutal. Please optimize.", "category": "complaint", "priority": "high", "engagement": 178, "author": "gas_watcher", "followers": 4200},
-        {"text": "Would love native limit orders without needing a third-party plugin.", "category": "feature_request", "priority": "medium", "engagement": 95, "author": "trader_joe", "followers": 6700},
-        {"text": "The mobile wallet experience is top-tier. Smooth swaps every time.", "category": "praise", "priority": "low", "engagement": 67, "author": "mobile_user", "followers": 1800},
-        {"text": "Getting slippage errors on large trades even with 5% tolerance.", "category": "bug", "priority": "high", "engagement": 45, "author": "whale_problems", "followers": 9500},
-        {"text": "How does concentrated liquidity actually work in V3?", "category": "question", "priority": "low", "engagement": 34, "author": "lp_newbie", "followers": 320},
+        {"text": "V4 hooks are going to unlock insane customization for pools.", "category": "praise", "priority": "medium", "engagement": 312, "author": "defi_whale", "followers": 25000, "timestamp": _ts(0.5)},
+        {"text": "Gas fees on mainnet are still brutal. Please optimize.", "category": "complaint", "priority": "high", "engagement": 178, "author": "gas_watcher", "followers": 4200, "timestamp": _ts(1.1)},
+        {"text": "Would love native limit orders without needing a third-party plugin.", "category": "feature_request", "priority": "medium", "engagement": 95, "author": "trader_joe", "followers": 6700, "timestamp": _ts(2.3)},
+        {"text": "The mobile wallet experience is top-tier. Smooth swaps every time.", "category": "praise", "priority": "low", "engagement": 67, "author": "mobile_user", "followers": 1800, "timestamp": _ts(3.0)},
+        {"text": "Getting slippage errors on large trades even with 5% tolerance.", "category": "bug", "priority": "high", "engagement": 45, "author": "whale_problems", "followers": 9500, "timestamp": _ts(4.7)},
+        {"text": "How does concentrated liquidity actually work in V3?", "category": "question", "priority": "low", "engagement": 34, "author": "lp_newbie", "followers": 320, "timestamp": _ts(5.8)},
     ],
     "aave": [
-        {"text": "GHO is the stablecoin we actually needed. Fully decentralized and stable.", "category": "praise", "priority": "medium", "engagement": 198, "author": "stablecoin_fan", "followers": 11000},
-        {"text": "V3 efficiency mode is a game changer for correlated assets.", "category": "praise", "priority": "medium", "engagement": 156, "author": "yield_farmer", "followers": 7800},
-        {"text": "Governance participation is really healthy. Love the transparent process.", "category": "praise", "priority": "low", "engagement": 89, "author": "gov_voter", "followers": 3400},
-        {"text": "Liquidation UX could be much better. Hard to track health factor.", "category": "complaint", "priority": "high", "engagement": 67, "author": "risk_mgr", "followers": 5200},
-        {"text": "Need better docs for new integrators. Took 3 days to figure out flash loans.", "category": "feature_request", "priority": "medium", "engagement": 45, "author": "new_integrator", "followers": 1200},
-        {"text": "Safety module yields keep attracting people. Smart incentive design.", "category": "praise", "priority": "low", "engagement": 78, "author": "yield_seeker", "followers": 4100},
+        {"text": "GHO is the stablecoin we actually needed. Fully decentralized and stable.", "category": "praise", "priority": "medium", "engagement": 198, "author": "stablecoin_fan", "followers": 11000, "timestamp": _ts(0.4)},
+        {"text": "V3 efficiency mode is a game changer for correlated assets.", "category": "praise", "priority": "medium", "engagement": 156, "author": "yield_farmer", "followers": 7800, "timestamp": _ts(1.5)},
+        {"text": "Governance participation is really healthy. Love the transparent process.", "category": "praise", "priority": "low", "engagement": 89, "author": "gov_voter", "followers": 3400, "timestamp": _ts(2.8)},
+        {"text": "Liquidation UX could be much better. Hard to track health factor.", "category": "complaint", "priority": "high", "engagement": 67, "author": "risk_mgr", "followers": 5200, "timestamp": _ts(3.2)},
+        {"text": "Need better docs for new integrators. Took 3 days to figure out flash loans.", "category": "feature_request", "priority": "medium", "engagement": 45, "author": "new_integrator", "followers": 1200, "timestamp": _ts(4.5)},
+        {"text": "Safety module yields keep attracting people. Smart incentive design.", "category": "praise", "priority": "low", "engagement": 78, "author": "yield_seeker", "followers": 4100, "timestamp": _ts(5.1)},
     ],
     "base": [
-        {"text": "Fees are SO low on Base. This is what Ethereum should feel like.", "category": "praise", "priority": "medium", "engagement": 267, "author": "l2_lover", "followers": 8900},
-        {"text": "Coinbase integration makes onboarding trivial. My mom could use this.", "category": "praise", "priority": "low", "engagement": 145, "author": "onboarding_fan", "followers": 3200},
-        {"text": "Worried about centralization. Single sequencer is a real concern.", "category": "complaint", "priority": "high", "engagement": 198, "author": "decentralist", "followers": 15000},
-        {"text": "Bridge reliability has been sketchy. Had a tx stuck for 6 hours.", "category": "bug", "priority": "high", "engagement": 89, "author": "bridge_user", "followers": 4500},
-        {"text": "Developer experience is honestly the best of any L2 right now.", "category": "praise", "priority": "medium", "engagement": 112, "author": "base_builder", "followers": 6200},
-        {"text": "NFT community on Base is exploding. Friends on Chain is addictive.", "category": "praise", "priority": "low", "engagement": 78, "author": "nft_collector", "followers": 2100},
+        {"text": "Fees are SO low on Base. This is what Ethereum should feel like.", "category": "praise", "priority": "medium", "engagement": 267, "author": "l2_lover", "followers": 8900, "timestamp": _ts(0.2)},
+        {"text": "Coinbase integration makes onboarding trivial. My mom could use this.", "category": "praise", "priority": "low", "engagement": 145, "author": "onboarding_fan", "followers": 3200, "timestamp": _ts(1.0)},
+        {"text": "Worried about centralization. Single sequencer is a real concern.", "category": "complaint", "priority": "high", "engagement": 198, "author": "decentralist", "followers": 15000, "timestamp": _ts(2.0)},
+        {"text": "Bridge reliability has been sketchy. Had a tx stuck for 6 hours.", "category": "bug", "priority": "high", "engagement": 89, "author": "bridge_user", "followers": 4500, "timestamp": _ts(3.3)},
+        {"text": "Developer experience is honestly the best of any L2 right now.", "category": "praise", "priority": "medium", "engagement": 112, "author": "base_builder", "followers": 6200, "timestamp": _ts(4.1)},
+        {"text": "NFT community on Base is exploding. Friends on Chain is addictive.", "category": "praise", "priority": "low", "engagement": 78, "author": "nft_collector", "followers": 2100, "timestamp": _ts(5.9)},
     ],
     "arbitrum": [
-        {"text": "Stylus is going to bring so many Rust devs to crypto.", "category": "praise", "priority": "medium", "engagement": 178, "author": "rust_dev", "followers": 7200},
-        {"text": "BOLD upgrade makes fraud proofs actually permissionless. Huge.", "category": "praise", "priority": "high", "engagement": 234, "author": "l2_researcher", "followers": 12000},
-        {"text": "ARB token governance is a mess. Too much whale control.", "category": "complaint", "priority": "high", "engagement": 312, "author": "small_holder", "followers": 2800},
-        {"text": "Sequencer is still centralized. When decentralized sequencing?", "category": "complaint", "priority": "high", "engagement": 267, "author": "decentralist_2", "followers": 9500},
-        {"text": "DeFi ecosystem on Arbitrum is deep. GMX, Camelot, Radiant all solid.", "category": "praise", "priority": "medium", "engagement": 89, "author": "arb_user", "followers": 5400},
-        {"text": "UX on most Arbitrum dapps is rough. Feels like 2020 Ethereum.", "category": "complaint", "priority": "medium", "engagement": 56, "author": "ux_critic", "followers": 3400},
+        {"text": "Stylus is going to bring so many Rust devs to crypto.", "category": "praise", "priority": "medium", "engagement": 178, "author": "rust_dev", "followers": 7200, "timestamp": _ts(0.6)},
+        {"text": "BOLD upgrade makes fraud proofs actually permissionless. Huge.", "category": "praise", "priority": "high", "engagement": 234, "author": "l2_researcher", "followers": 12000, "timestamp": _ts(1.4)},
+        {"text": "ARB token governance is a mess. Too much whale control.", "category": "complaint", "priority": "high", "engagement": 312, "author": "small_holder", "followers": 2800, "timestamp": _ts(2.5)},
+        {"text": "Sequencer is still centralized. When decentralized sequencing?", "category": "complaint", "priority": "high", "engagement": 267, "author": "decentralist_2", "followers": 9500, "timestamp": _ts(3.7)},
+        {"text": "DeFi ecosystem on Arbitrum is deep. GMX, Camelot, Radiant all solid.", "category": "praise", "priority": "medium", "engagement": 89, "author": "arb_user", "followers": 5400, "timestamp": _ts(4.9)},
+        {"text": "UX on most Arbitrum dapps is rough. Feels like 2020 Ethereum.", "category": "complaint", "priority": "medium", "engagement": 56, "author": "ux_critic", "followers": 3400, "timestamp": _ts(6.0)},
     ],
 }
 
@@ -113,7 +119,7 @@ async def get_sentiment(project: str, period: str = Query("1h")):
     return {
         "project": project,
         "period": period,
-        "is_demo": True,
+        "mode": "staging",
         "score": DEMO_SCORES.get(project, 50),
         "total_mentions": len(items),
         "breakdown": {

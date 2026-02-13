@@ -4,8 +4,13 @@
   "projects": ["chainlink", "uniswap", "aave", "base", "arbitrum"],
   "evms": [
     {
-      "oracleAddress": "0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE",
+      "oracleAddress": "0xcA374e8bba8bd2BA0Aed26c4d425aA9aa7E058D0",
       "chainSelectorName": "ethereum-testnet-sepolia",
+      "gasLimit": "800000"
+    },
+    {
+      "oracleAddress": "0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE",
+      "chainSelectorName": "ethereum-testnet-sepolia-base-1",
       "gasLimit": "800000"
     }
   ]

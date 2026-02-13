@@ -65,7 +65,7 @@ cre workflow simulate . --broadcast
 "Let's verify the data landed on-chain:"
 
 ```bash
-cast call 0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE \
+cast call 0xcA374e8bba8bd2BA0Aed26c4d425aA9aa7E058D0 \
   "getSentiment(string)(uint8,uint32,uint32,uint32,uint32,string,uint256)" \
   "chainlink" --rpc-url https://ethereum-sepolia-rpc.publicnode.com
 ```
