@@ -1,0 +1,2229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SignalBox -- On-Chain Social Sentiment Oracle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #0A0A0A;
+  --fg: #F5F0E8;
+  --fg-dim: rgba(245, 240, 232, 0.55);
+  --fg-muted: rgba(245, 240, 232, 0.35);
+  --red: #E63946;
+  --red-dim: rgba(230, 57, 70, 0.15);
+  --rule: rgba(245, 240, 232, 0.15);
+  --rule-strong: rgba(245, 240, 232, 0.3);
+  --serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --sans: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif;
+  --mono: 'JetBrains Mono', 'Courier New', monospace;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --transition-fast: 0.2s var(--ease);
+  --transition-med: 0.4s var(--ease);
+  --transition-slow: 0.6s var(--ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Focus visible */
+:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 3px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+a {
+  color: var(--fg);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--red);
+}
+
+/* ============================================================
+   IMMERSIVE BACKGROUND PATTERN
+   ============================================================ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 79px,
+      rgba(245, 240, 232, 0.03) 79px,
+      rgba(245, 240, 232, 0.03) 80px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 79px,
+      rgba(245, 240, 232, 0.03) 79px,
+      rgba(245, 240, 232, 0.03) 80px
+    );
+  pointer-events: none;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: radial-gradient(ellipse 80% 60% at 70% 20%, rgba(230, 57, 70, 0.04), transparent 70%);
+  pointer-events: none;
+}
+
+/* ============================================================
+   SAMPLE DATA WATERMARK
+   ============================================================ */
+.watermark {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-35deg);
+  font-family: var(--serif);
+  font-size: 8vw;
+  font-weight: 700;
+  color: rgba(245, 240, 232, 0.025);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  pointer-events: none;
+  z-index: 0;
+  white-space: nowrap;
+  user-select: none;
+}
+
+/* ============================================================
+   DNA BADGE (fixed top-right)
+   ============================================================ */
+.dna-badge {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 1000;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  color: var(--fg-dim);
+  background: rgba(10, 10, 10, 0.9);
+  border: 1px solid var(--rule);
+  padding: 6px 12px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.dna-badge span {
+  color: var(--red);
+}
+
+/* ============================================================
+   NAVIGATION -- top-fixed, logo RIGHT, nav LEFT, stacked
+   ============================================================ */
+.nav-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 900;
+  background: rgba(10, 10, 10, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--rule);
+}
+
+.nav-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+}
+
+.nav-links {
+  display: flex;
+  gap: 0;
+  order: -1;
+}
+
+.nav-link {
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg-dim);
+  padding: 22px 20px;
+  cursor: pointer;
+  transition: color var(--transition-fast), background var(--transition-fast);
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border: none;
+  background: none;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 20px;
+  right: 20px;
+  height: 2px;
+  background: var(--red);
+  transform: scaleX(0);
+  transition: transform var(--transition-fast);
+}
+
+.nav-link:hover {
+  color: var(--fg);
+}
+
+.nav-link.active {
+  color: var(--fg);
+}
+
+.nav-link.active::after {
+  transform: scaleX(1);
+}
+
+.nav-logo {
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nav-logo-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--red);
+  display: inline-block;
+}
+
+.nav-subtitle {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  margin-top: 2px;
+}
+
+.nav-logo-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+/* ============================================================
+   PAGE CONTAINER
+   ============================================================ */
+.page-container {
+  position: relative;
+  z-index: 1;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 96px 32px 80px;
+  min-height: 100vh;
+}
+
+.page {
+  display: none;
+  animation: pageIn 0.5s var(--ease) both;
+}
+
+.page.active {
+  display: block;
+}
+
+@keyframes pageIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================================
+   DATELINE
+   ============================================================ */
+.dateline {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  margin-bottom: 32px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.dateline .edition {
+  color: var(--red);
+  margin-left: 16px;
+}
+
+/* ============================================================
+   HORIZONTAL RULE
+   ============================================================ */
+.hr {
+  border: none;
+  border-top: 1px solid var(--rule);
+  margin: 32px 0;
+}
+
+.hr--strong {
+  border-top: 1px solid var(--rule-strong);
+}
+
+.hr--double {
+  border-top: 3px double var(--rule-strong);
+}
+
+/* ============================================================
+   SECTION HEADER (Swiss style)
+   ============================================================ */
+.section-header {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.section-number {
+  font-family: var(--serif);
+  font-size: 48px;
+  font-weight: 800;
+  color: var(--red);
+  line-height: 1;
+}
+
+.section-title {
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--fg-dim);
+}
+
+/* ============================================================
+   SKELETON LOADING
+   ============================================================ */
+@keyframes skeletonPulse {
+  0%, 100% { opacity: 0.06; }
+  50% { opacity: 0.12; }
+}
+
+.skeleton {
+  background: var(--fg);
+  animation: skeletonPulse 1.8s ease-in-out infinite;
+}
+
+.skeleton-line {
+  height: 14px;
+  margin-bottom: 10px;
+  background: var(--fg);
+  animation: skeletonPulse 1.8s ease-in-out infinite;
+}
+
+.skeleton-line:last-child {
+  width: 60%;
+}
+
+/* ============================================================
+   DASHBOARD PAGE
+   ============================================================ */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 0;
+  margin-top: 8px;
+}
+
+.dashboard-main {
+  padding-right: 48px;
+  border-right: 1px solid var(--rule);
+}
+
+.dashboard-sidebar {
+  padding-left: 48px;
+}
+
+/* Featured project */
+.featured-project {
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  padding: 24px 0;
+}
+
+.featured-project:hover .featured-name {
+  color: var(--red);
+}
+
+.featured-score-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 24px;
+  margin-bottom: 12px;
+}
+
+.featured-score {
+  font-family: var(--serif);
+  font-size: 120px;
+  font-weight: 800;
+  line-height: 0.85;
+  letter-spacing: -0.04em;
+  color: var(--fg);
+}
+
+.featured-score-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  margin-bottom: 16px;
+}
+
+.featured-name {
+  font-family: var(--serif);
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+  transition: color var(--transition-fast);
+}
+
+.featured-summary {
+  font-family: var(--serif);
+  font-size: 18px;
+  font-style: italic;
+  line-height: 1.7;
+  color: var(--fg-dim);
+  max-width: 580px;
+  margin-bottom: 20px;
+}
+
+.featured-meta {
+  display: flex;
+  gap: 24px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--fg-muted);
+}
+
+.featured-meta-item span {
+  color: var(--fg-dim);
+}
+
+/* Category columns (newspaper style) */
+.category-section {
+  margin-top: 48px;
+}
+
+.category-columns {
+  column-count: 2;
+  column-gap: 40px;
+  column-rule: 1px solid var(--rule);
+}
+
+.category-item {
+  break-inside: avoid;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.category-name {
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.category-count {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--fg-dim);
+}
+
+.category-bar {
+  display: block;
+  height: 2px;
+  background: var(--fg-muted);
+  margin-top: 8px;
+  transition: width var(--transition-slow);
+}
+
+.category-bar--accent {
+  background: var(--red);
+}
+
+/* Sidebar project cards */
+.sidebar-project {
+  padding: 20px 0;
+  border-bottom: 1px solid var(--rule);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.sidebar-project:hover .sidebar-project-name {
+  color: var(--red);
+}
+
+.sidebar-project-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 6px;
+}
+
+.sidebar-project-name {
+  font-family: var(--serif);
+  font-size: 18px;
+  font-weight: 600;
+  transition: color var(--transition-fast);
+}
+
+.sidebar-project-score {
+  font-family: var(--serif);
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.sidebar-project-score.negative {
+  color: var(--red);
+}
+
+.sidebar-project-summary {
+  font-family: var(--serif);
+  font-size: 13px;
+  font-style: italic;
+  color: var(--fg-dim);
+  line-height: 1.5;
+}
+
+.sidebar-project-meta {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--fg-muted);
+  margin-top: 8px;
+  letter-spacing: 0.05em;
+}
+
+.sidebar-heading {
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  padding-bottom: 12px;
+  border-bottom: 3px double var(--rule-strong);
+  margin-bottom: 0;
+}
+
+/* ============================================================
+   PROJECT DETAIL PAGE
+   ============================================================ */
+.detail-header {
+  margin-bottom: 48px;
+}
+
+.detail-score-block {
+  display: flex;
+  align-items: flex-end;
+  gap: 32px;
+  margin-bottom: 24px;
+}
+
+.detail-score {
+  font-family: var(--serif);
+  font-size: 140px;
+  font-weight: 800;
+  line-height: 0.82;
+  letter-spacing: -0.05em;
+}
+
+.detail-score-meta {
+  margin-bottom: 16px;
+}
+
+.detail-score-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.detail-score-change {
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--fg-dim);
+  margin-top: 4px;
+}
+
+.detail-score-change.up {
+  color: var(--fg);
+}
+
+.detail-score-change.down {
+  color: var(--red);
+}
+
+.detail-project-name {
+  font-family: var(--serif);
+  font-size: 48px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 4px;
+}
+
+.detail-project-address {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--fg-muted);
+  margin-bottom: 20px;
+}
+
+/* Pull quote (AI summary) */
+.pull-quote {
+  border-left: 3px solid var(--red);
+  padding: 24px 0 24px 32px;
+  margin: 40px 0;
+  max-width: 700px;
+}
+
+.pull-quote-text {
+  font-family: var(--serif);
+  font-size: 22px;
+  font-style: italic;
+  line-height: 1.7;
+  color: var(--fg);
+}
+
+.pull-quote-text .drop-cap {
+  font-size: 60px;
+  float: left;
+  line-height: 0.75;
+  margin-right: 8px;
+  margin-top: 6px;
+  font-style: normal;
+  font-weight: 800;
+  color: var(--red);
+}
+
+.pull-quote-attr {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  margin-top: 16px;
+}
+
+/* Detail grid */
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 0;
+  margin-top: 48px;
+}
+
+.detail-feed {
+  padding-right: 48px;
+  border-right: 1px solid var(--rule);
+}
+
+.detail-chain {
+  padding-left: 48px;
+}
+
+/* Newswire feed */
+.feed-item {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--rule);
+  transition: background var(--transition-fast);
+}
+
+.feed-item:hover {
+  background: rgba(245, 240, 232, 0.02);
+}
+
+.feed-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+}
+
+.feed-item-source {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.feed-item-time {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--fg-muted);
+}
+
+.feed-item-text {
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--fg-dim);
+}
+
+.feed-item-category {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  margin-top: 8px;
+  padding: 2px 8px;
+  border: 1px solid var(--rule);
+}
+
+.feed-item-category.complaint,
+.feed-item-category.bug {
+  color: var(--red);
+  border-color: rgba(230, 57, 70, 0.3);
+}
+
+/* On-chain data table */
+.chain-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--sans);
+  font-size: 13px;
+}
+
+.chain-table th {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  text-align: left;
+  padding: 12px 0;
+  border-bottom: 2px solid var(--rule-strong);
+}
+
+.chain-table td {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--rule);
+  color: var(--fg-dim);
+}
+
+.chain-table td:first-child {
+  color: var(--fg);
+  font-weight: 500;
+}
+
+.chain-table .mono {
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.chain-table .red {
+  color: var(--red);
+}
+
+/* Back link */
+.back-link {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 32px;
+  transition: color var(--transition-fast);
+  min-height: 44px;
+  background: none;
+  border: none;
+}
+
+.back-link:hover {
+  color: var(--red);
+}
+
+/* ============================================================
+   WORKFLOW PAGE -- Vertical timeline
+   ============================================================ */
+.workflow-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 0;
+}
+
+.workflow-main {
+  padding-right: 48px;
+  border-right: 1px solid var(--rule);
+}
+
+.workflow-sidebar {
+  padding-left: 48px;
+}
+
+.timeline {
+  position: relative;
+  padding-left: 80px;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 32px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--rule-strong);
+}
+
+.timeline-step {
+  position: relative;
+  padding: 0 0 48px 0;
+}
+
+.timeline-step:last-child {
+  padding-bottom: 0;
+}
+
+.timeline-number {
+  position: absolute;
+  left: -80px;
+  top: -4px;
+  font-family: var(--serif);
+  font-size: 40px;
+  font-weight: 800;
+  color: var(--red);
+  width: 64px;
+  text-align: center;
+  line-height: 1;
+}
+
+.timeline-dot {
+  position: absolute;
+  left: -52px;
+  top: 12px;
+  width: 9px;
+  height: 9px;
+  background: var(--bg);
+  border: 2px solid var(--fg-muted);
+  z-index: 1;
+}
+
+.timeline-step.active .timeline-dot {
+  background: var(--red);
+  border-color: var(--red);
+}
+
+.timeline-step.completed .timeline-dot {
+  background: var(--fg);
+  border-color: var(--fg);
+}
+
+.timeline-title {
+  font-family: var(--sans);
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.timeline-desc {
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--fg-dim);
+  line-height: 1.6;
+  max-width: 500px;
+}
+
+.timeline-status {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-top: 8px;
+}
+
+.timeline-status.idle {
+  color: var(--fg-muted);
+}
+
+.timeline-status.running {
+  color: var(--red);
+}
+
+.timeline-status.done {
+  color: var(--fg-dim);
+}
+
+/* Run history */
+.run-item {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.run-time {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--fg-dim);
+}
+
+.run-status {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.run-status.success {
+  color: var(--fg-dim);
+}
+
+.run-status.failed {
+  color: var(--red);
+}
+
+.run-score {
+  font-family: var(--serif);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* ============================================================
+   SETTINGS PAGE
+   ============================================================ */
+.settings-section {
+  margin-bottom: 48px;
+  max-width: 700px;
+}
+
+.settings-section-title {
+  font-family: var(--serif);
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+.form-row {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.form-label {
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 500;
+  min-width: 180px;
+  flex-shrink: 0;
+}
+
+.form-label-sub {
+  font-size: 12px;
+  color: var(--fg-muted);
+  font-weight: 400;
+  display: block;
+  margin-top: 2px;
+}
+
+.form-input {
+  flex: 1;
+  background: transparent;
+  border: 1px solid var(--rule-strong);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 14px;
+  padding: 10px 14px;
+  min-height: 44px;
+  transition: border-color var(--transition-fast);
+  font-variant-numeric: tabular-nums;
+}
+
+.form-input:focus {
+  border-color: var(--fg-dim);
+  outline: none;
+}
+
+.form-input.mono {
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.form-input::placeholder {
+  color: var(--fg-muted);
+}
+
+/* Toggle switch */
+.toggle {
+  position: relative;
+  width: 48px;
+  height: 28px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.toggle-track {
+  position: absolute;
+  inset: 0;
+  background: rgba(245, 240, 232, 0.1);
+  border: 1px solid var(--rule-strong);
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.toggle-thumb {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 18px;
+  height: 18px;
+  background: var(--fg-dim);
+  transition: transform var(--transition-fast), background var(--transition-fast);
+}
+
+.toggle input:checked + .toggle-track {
+  background: var(--red-dim);
+  border-color: var(--red);
+}
+
+.toggle input:checked + .toggle-track + .toggle-thumb {
+  transform: translateX(20px);
+  background: var(--red);
+}
+
+.form-select {
+  flex: 1;
+  background: transparent;
+  border: 1px solid var(--rule-strong);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 14px;
+  padding: 10px 14px;
+  min-height: 44px;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23F5F0E8' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  cursor: pointer;
+}
+
+.form-select option {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.btn-save {
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--bg);
+  background: var(--red);
+  border: none;
+  padding: 14px 32px;
+  cursor: pointer;
+  min-height: 44px;
+  transition: opacity var(--transition-fast);
+}
+
+.btn-save:hover {
+  opacity: 0.85;
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.page-footer {
+  position: relative;
+  z-index: 1;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 40px 32px 60px;
+  border-top: 1px solid var(--rule);
+}
+
+.footer-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.footer-left {
+  font-family: var(--serif);
+  font-size: 13px;
+  font-style: italic;
+  color: var(--fg-muted);
+}
+
+.footer-right {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--fg-muted);
+}
+
+.footer-right a {
+  color: var(--fg-dim);
+}
+
+/* ============================================================
+   EMPTY STATE
+   ============================================================ */
+.empty-state {
+  text-align: center;
+  padding: 120px 0;
+}
+
+.empty-state-text {
+  font-family: var(--serif);
+  font-size: 36px;
+  font-style: italic;
+  color: var(--fg-muted);
+  letter-spacing: -0.01em;
+}
+
+.empty-state-sub {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  margin-top: 12px;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 1024px) {
+  .dashboard-grid,
+  .detail-grid,
+  .workflow-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-main {
+    padding-right: 0;
+    border-right: none;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 40px;
+    margin-bottom: 40px;
+  }
+
+  .dashboard-sidebar {
+    padding-left: 0;
+  }
+
+  .detail-feed {
+    padding-right: 0;
+    border-right: none;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 40px;
+    margin-bottom: 40px;
+  }
+
+  .detail-chain {
+    padding-left: 0;
+  }
+
+  .workflow-main {
+    padding-right: 0;
+    border-right: none;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 40px;
+    margin-bottom: 40px;
+  }
+
+  .workflow-sidebar {
+    padding-left: 0;
+  }
+
+  .featured-score {
+    font-size: 80px;
+  }
+
+  .detail-score {
+    font-size: 100px;
+  }
+
+  .category-columns {
+    column-count: 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .page-container {
+    padding: 80px 16px 60px;
+  }
+
+  .nav-inner {
+    padding: 0 16px;
+  }
+
+  .nav-link {
+    padding: 22px 12px;
+    font-size: 10px;
+  }
+
+  .nav-logo {
+    font-size: 16px;
+  }
+
+  .featured-score {
+    font-size: 64px;
+  }
+
+  .detail-score {
+    font-size: 72px;
+  }
+
+  .form-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .form-label {
+    min-width: unset;
+  }
+
+  .form-input,
+  .form-select {
+    width: 100%;
+  }
+}
+
+/* ============================================================
+   SCORE SENTIMENT COLORS
+   ============================================================ */
+.score-positive { color: var(--fg); }
+.score-neutral { color: var(--fg-dim); }
+.score-negative { color: var(--red); }
+
+/* ============================================================
+   CONTRACT BADGE
+   ============================================================ */
+.contract-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--fg-muted);
+  padding: 6px 12px;
+  border: 1px solid var(--rule);
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.contract-badge:hover {
+  border-color: var(--fg-dim);
+}
+
+.contract-badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: var(--red);
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   INLINE SENTIMENT BAR
+   ============================================================ */
+.sentiment-bar {
+  display: flex;
+  height: 3px;
+  gap: 2px;
+  margin-top: 12px;
+}
+
+.sentiment-bar-segment {
+  height: 100%;
+  transition: width var(--transition-slow);
+}
+
+.sentiment-bar-segment.positive { background: var(--fg); }
+.sentiment-bar-segment.neutral { background: var(--fg-muted); }
+.sentiment-bar-segment.negative { background: var(--red); }
+</style>
+</head>
+<body>
+
+<!-- WATERMARK -->
+<div class="watermark">SAMPLE DATA</div>
+
+<!-- DNA BADGE -->
+<div class="dna-badge">DNA-<span>A</span>-<span>T</span>-<span>I</span>-<span>M</span>-<span>E</span></div>
+
+<!-- NAVIGATION -->
+<nav class="nav-bar">
+  <div class="nav-inner">
+    <div class="nav-links">
+      <button class="nav-link active" data-page="dashboard" tabindex="0">Dashboard</button>
+      <button class="nav-link" data-page="detail" tabindex="0">Project</button>
+      <button class="nav-link" data-page="workflow" tabindex="0">Workflow</button>
+      <button class="nav-link" data-page="settings" tabindex="0">Settings</button>
+    </div>
+    <div class="nav-logo-group">
+      <div class="nav-logo"><span class="nav-logo-dot"></span> SignalBox</div>
+      <div class="nav-subtitle">On-Chain Sentiment Oracle</div>
+    </div>
+  </div>
+</nav>
+
+<!-- PAGES -->
+<div class="page-container">
+
+  <!-- =====================================================
+       DASHBOARD
+       ===================================================== -->
+  <div class="page active" id="page-dashboard">
+
+    <div class="dateline">
+      <span id="dateline-date"></span>
+      <span class="edition">Sepolia Edition</span>
+    </div>
+
+    <div class="dashboard-grid">
+      <!-- MAIN: Featured project -->
+      <div class="dashboard-main">
+        <div class="featured-project" data-project="chainlink" onclick="showProject('chainlink')">
+          <div class="featured-score-row">
+            <div class="featured-score score-positive">82</div>
+            <div class="featured-score-label">Composite<br>Sentiment Score</div>
+          </div>
+          <div class="featured-name">Chainlink</div>
+          <div class="featured-summary">
+            Strong positive momentum driven by CCIP expansion and CRE adoption. Community praise outweighs isolated technical complaints across all tracked channels.
+          </div>
+          <div class="featured-meta">
+            <div class="featured-meta-item">Sources: <span>847</span></div>
+            <div class="featured-meta-item">Last Update: <span>4 min ago</span></div>
+            <div class="featured-meta-item">Trend: <span>+3.2</span></div>
+          </div>
+          <div class="sentiment-bar">
+            <div class="sentiment-bar-segment positive" style="width:68%"></div>
+            <div class="sentiment-bar-segment neutral" style="width:22%"></div>
+            <div class="sentiment-bar-segment negative" style="width:10%"></div>
+          </div>
+        </div>
+
+        <hr class="hr--double">
+
+        <!-- Category breakdown -->
+        <div class="category-section">
+          <div class="section-header">
+            <div class="section-title">Category Breakdown</div>
+          </div>
+          <div class="category-columns">
+            <div class="category-item">
+              <div>
+                <div class="category-name">Praise</div>
+                <div class="category-bar" style="width:68%"></div>
+              </div>
+              <div class="category-count">342</div>
+            </div>
+            <div class="category-item">
+              <div>
+                <div class="category-name">Feature Request</div>
+                <div class="category-bar" style="width:24%"></div>
+              </div>
+              <div class="category-count">118</div>
+            </div>
+            <div class="category-item">
+              <div>
+                <div class="category-name">Question</div>
+                <div class="category-bar" style="width:30%"></div>
+              </div>
+              <div class="category-count">152</div>
+            </div>
+            <div class="category-item">
+              <div>
+                <div class="category-name">Bug</div>
+                <div class="category-bar category-bar--accent" style="width:12%"></div>
+              </div>
+              <div class="category-count">58</div>
+            </div>
+            <div class="category-item">
+              <div>
+                <div class="category-name">Complaint</div>
+                <div class="category-bar category-bar--accent" style="width:8%"></div>
+              </div>
+              <div class="category-count">41</div>
+            </div>
+          </div>
+        </div>
+
+        <hr class="hr">
+
+        <div class="contract-badge" onclick="copyContract()" title="Click to copy">
+          0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE
+        </div>
+      </div>
+
+      <!-- SIDEBAR: Other projects -->
+      <div class="dashboard-sidebar">
+        <div class="sidebar-heading">All Projects</div>
+
+        <div class="sidebar-project" onclick="showProject('aave')">
+          <div class="sidebar-project-top">
+            <div class="sidebar-project-name">Aave</div>
+            <div class="sidebar-project-score score-positive">78</div>
+          </div>
+          <div class="sidebar-project-summary">V3 lending protocol maintaining solid community trust. Safety module discussions driving engagement.</div>
+          <div class="sidebar-project-meta">512 SOURCES / +1.8 TREND</div>
+          <div class="sentiment-bar">
+            <div class="sentiment-bar-segment positive" style="width:62%"></div>
+            <div class="sentiment-bar-segment neutral" style="width:26%"></div>
+            <div class="sentiment-bar-segment negative" style="width:12%"></div>
+          </div>
+        </div>
+
+        <div class="sidebar-project" onclick="showProject('base')">
+          <div class="sidebar-project-top">
+            <div class="sidebar-project-name">Base</div>
+            <div class="sidebar-project-score score-neutral">71</div>
+          </div>
+          <div class="sidebar-project-summary">L2 adoption growing steadily. Dev tooling praised, gas concerns declining.</div>
+          <div class="sidebar-project-meta">634 SOURCES / +0.5 TREND</div>
+          <div class="sentiment-bar">
+            <div class="sentiment-bar-segment positive" style="width:55%"></div>
+            <div class="sentiment-bar-segment neutral" style="width:30%"></div>
+            <div class="sentiment-bar-segment negative" style="width:15%"></div>
+          </div>
+        </div>
+
+        <div class="sidebar-project" onclick="showProject('uniswap')">
+          <div class="sidebar-project-top">
+            <div class="sidebar-project-name">Uniswap</div>
+            <div class="sidebar-project-score score-neutral">65</div>
+          </div>
+          <div class="sidebar-project-summary">Mixed sentiment. V4 hooks generating excitement but fee switch debate creating friction.</div>
+          <div class="sidebar-project-meta">923 SOURCES / -2.1 TREND</div>
+          <div class="sentiment-bar">
+            <div class="sentiment-bar-segment positive" style="width:45%"></div>
+            <div class="sentiment-bar-segment neutral" style="width:32%"></div>
+            <div class="sentiment-bar-segment negative" style="width:23%"></div>
+          </div>
+        </div>
+
+        <div class="sidebar-project" onclick="showProject('arbitrum')">
+          <div class="sidebar-project-top">
+            <div class="sidebar-project-name">Arbitrum</div>
+            <div class="sidebar-project-score score-negative">58</div>
+          </div>
+          <div class="sidebar-project-summary">DAO governance concerns and ARB unlock pressure weighing on sentiment. Technical performance still praised.</div>
+          <div class="sidebar-project-meta">478 SOURCES / -4.7 TREND</div>
+          <div class="sentiment-bar">
+            <div class="sentiment-bar-segment positive" style="width:38%"></div>
+            <div class="sentiment-bar-segment neutral" style="width:28%"></div>
+            <div class="sentiment-bar-segment negative" style="width:34%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================
+       PROJECT DETAIL
+       ===================================================== -->
+  <div class="page" id="page-detail">
+
+    <button class="back-link" onclick="navigateTo('dashboard')">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="1.5"/></svg>
+      Back to Dashboard
+    </button>
+
+    <div class="dateline">
+      <span id="detail-dateline"></span>
+      <span class="edition">Sepolia Edition</span>
+    </div>
+
+    <div class="detail-header">
+      <div class="detail-score-block">
+        <div class="detail-score score-positive" id="detail-score">82</div>
+        <div class="detail-score-meta">
+          <div class="detail-score-label">Composite Score</div>
+          <div class="detail-score-change up" id="detail-trend">+3.2 from last epoch</div>
+        </div>
+      </div>
+      <div class="detail-project-name" id="detail-name">Chainlink</div>
+      <div class="detail-project-address">Contract: 0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE</div>
+    </div>
+
+    <div class="pull-quote">
+      <div class="pull-quote-text" id="detail-summary">
+        <span class="drop-cap">S</span>trong positive momentum driven by CCIP expansion and CRE adoption. Community praise significantly outweighs isolated technical complaints. Developer engagement remains high across documentation and tooling channels.
+      </div>
+      <div class="pull-quote-attr">AI-Generated Summary / CRE Pipeline v1.2</div>
+    </div>
+
+    <div class="detail-grid">
+      <!-- Feed -->
+      <div class="detail-feed">
+        <div class="section-header">
+          <div class="section-number">I</div>
+          <div class="section-title">Signal Feed</div>
+        </div>
+
+        <div class="feed-item">
+          <div class="feed-item-header">
+            <span class="feed-item-source">Discord / #general</span>
+            <span class="feed-item-time">12:47</span>
+          </div>
+          <div class="feed-item-text">"CCIP is a game-changer for cross-chain. Just bridged tokens from Ethereum to Polygon in under 2 minutes. The future of interoperability is here."</div>
+          <span class="feed-item-category">praise</span>
+        </div>
+
+        <div class="feed-item">
+          <div class="feed-item-header">
+            <span class="feed-item-source">Discord / #developers</span>
+            <span class="feed-item-time">11:23</span>
+          </div>
+          <div class="feed-item-text">"CRE makes building custom oracle solutions so much easier. Deployed a weather data feed in under an hour. Incredible developer experience."</div>
+          <span class="feed-item-category">praise</span>
+        </div>
+
+        <div class="feed-item">
+          <div class="feed-item-header">
+            <span class="feed-item-source">Telegram / Solana</span>
+            <span class="feed-item-time">10:58</span>
+          </div>
+          <div class="feed-item-text">"When are you expanding CRE to support Solana natively? The community here is ready to build."</div>
+          <span class="feed-item-category">feature_request</span>
+        </div>
+
+        <div class="feed-item">
+          <div class="feed-item-header">
+            <span class="feed-item-source">Discord / #price-feeds</span>
+            <span class="feed-item-time">09:34</span>
+          </div>
+          <div class="feed-item-text">"Price feeds have been rock solid. 99.99% uptime on the pairs I'm tracking. Best oracle reliability in the space."</div>
+          <span class="feed-item-category">praise</span>
+        </div>
+
+        <div class="feed-item">
+          <div class="feed-item-header">
+            <span class="feed-item-source">Discord / #documentation</span>
+            <span class="feed-item-time">08:12</span>
+          </div>
+          <div class="feed-item-text">"The new docs site is significantly worse for finding API references. Please bring back the old search."</div>
+          <span class="feed-item-category complaint">complaint</span>
+        </div>
+
+        <div class="feed-item">
+          <div class="feed-item-header">
+            <span class="feed-item-source">Telegram / Main</span>
+            <span class="feed-item-time">07:45</span>
+          </div>
+          <div class="feed-item-text">"Can we use custom data feeds with CRE for off-chain sports data? Looking to build a prediction market."</div>
+          <span class="feed-item-category">question</span>
+        </div>
+
+        <div class="feed-item">
+          <div class="feed-item-header">
+            <span class="feed-item-source">Discord / #functions</span>
+            <span class="feed-item-time">06:19</span>
+          </div>
+          <div class="feed-item-text">"Functions just works. Called an external API, got verified data on-chain in one transaction. This is what Web3 needed."</div>
+          <span class="feed-item-category">praise</span>
+        </div>
+
+        <div class="feed-item">
+          <div class="feed-item-header">
+            <span class="feed-item-source">Discord / #support</span>
+            <span class="feed-item-time">05:03</span>
+          </div>
+          <div class="feed-item-text">"Getting timeout errors on M1 Mac when running the local node. Anyone else hitting this?"</div>
+          <span class="feed-item-category bug">bug</span>
+        </div>
+      </div>
+
+      <!-- On-chain data -->
+      <div class="detail-chain">
+        <div class="section-header">
+          <div class="section-number">II</div>
+          <div class="section-title">On-Chain Data</div>
+        </div>
+
+        <table class="chain-table">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Last Score</td>
+              <td class="mono">82</td>
+            </tr>
+            <tr>
+              <td>Previous Score</td>
+              <td class="mono">79</td>
+            </tr>
+            <tr>
+              <td>Total Sources</td>
+              <td class="mono">847</td>
+            </tr>
+            <tr>
+              <td>Last Updated</td>
+              <td class="mono">Block #7,234,891</td>
+            </tr>
+            <tr>
+              <td>Update Epoch</td>
+              <td class="mono">6h</td>
+            </tr>
+            <tr>
+              <td>Category: Praise</td>
+              <td class="mono">342 (40.5%)</td>
+            </tr>
+            <tr>
+              <td>Category: Feature Req</td>
+              <td class="mono">118 (13.9%)</td>
+            </tr>
+            <tr>
+              <td>Category: Question</td>
+              <td class="mono">152 (17.9%)</td>
+            </tr>
+            <tr>
+              <td>Category: Bug</td>
+              <td class="mono red">58 (6.8%)</td>
+            </tr>
+            <tr>
+              <td>Category: Complaint</td>
+              <td class="mono red">41 (4.8%)</td>
+            </tr>
+            <tr>
+              <td>Gas Used (Last Tx)</td>
+              <td class="mono">142,847</td>
+            </tr>
+            <tr>
+              <td>Contract</td>
+              <td class="mono" style="font-size:10px;word-break:break-all;">0x8e39...3AcE</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================
+       WORKFLOW
+       ===================================================== -->
+  <div class="page" id="page-workflow">
+
+    <div class="dateline">
+      <span id="workflow-dateline"></span>
+      <span class="edition">CRE Pipeline</span>
+    </div>
+
+    <div class="workflow-layout">
+      <div class="workflow-main">
+        <div class="section-header">
+          <div class="section-title">CRE Pipeline Stages</div>
+        </div>
+
+        <div class="timeline">
+          <div class="timeline-step completed">
+            <div class="timeline-number">1</div>
+            <div class="timeline-dot"></div>
+            <div class="timeline-title">Collect</div>
+            <div class="timeline-desc">Gather messages from Discord, Telegram, and governance forums. Filter by project keywords, remove spam and duplicates, normalize text for classification.</div>
+            <div class="timeline-status done">Completed / 847 messages collected</div>
+          </div>
+
+          <div class="timeline-step completed">
+            <div class="timeline-number">2</div>
+            <div class="timeline-dot"></div>
+            <div class="timeline-title">Classify</div>
+            <div class="timeline-desc">Run each message through the LLM classifier. Assign category (praise, feature_request, question, bug, complaint) and extract sentiment polarity with confidence score.</div>
+            <div class="timeline-status done">Completed / 847 classified</div>
+          </div>
+
+          <div class="timeline-step completed">
+            <div class="timeline-number">3</div>
+            <div class="timeline-dot"></div>
+            <div class="timeline-title">Aggregate</div>
+            <div class="timeline-desc">Compute weighted sentiment score from category distribution. Apply time decay, source credibility weights, and outlier dampening. Generate composite 0-100 score.</div>
+            <div class="timeline-status done">Completed / Score: 82</div>
+          </div>
+
+          <div class="timeline-step active">
+            <div class="timeline-number">4</div>
+            <div class="timeline-dot"></div>
+            <div class="timeline-title">Summarize</div>
+            <div class="timeline-desc">Generate natural language summary of sentiment drivers. Identify key themes, notable shifts, and emerging concerns. Create both short and detailed summary variants.</div>
+            <div class="timeline-status running">Running / ETA 12s</div>
+          </div>
+
+          <div class="timeline-step">
+            <div class="timeline-number">5</div>
+            <div class="timeline-dot"></div>
+            <div class="timeline-title">Publish</div>
+            <div class="timeline-desc">Submit score, category counts, and summary hash to the SignalBox smart contract on Sepolia. Verify transaction confirmation and emit SentimentUpdated event.</div>
+            <div class="timeline-status idle">Waiting</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="workflow-sidebar">
+        <div class="sidebar-heading">Run History</div>
+
+        <div class="run-item">
+          <div>
+            <div class="run-time">12 FEB 2026 / 22:00</div>
+            <div class="run-status running" style="margin-top:4px;">In Progress</div>
+          </div>
+          <div class="run-score">--</div>
+        </div>
+
+        <div class="run-item">
+          <div>
+            <div class="run-time">12 FEB 2026 / 16:00</div>
+            <div class="run-status success">Success</div>
+          </div>
+          <div class="run-score">82</div>
+        </div>
+
+        <div class="run-item">
+          <div>
+            <div class="run-time">12 FEB 2026 / 10:00</div>
+            <div class="run-status success">Success</div>
+          </div>
+          <div class="run-score">79</div>
+        </div>
+
+        <div class="run-item">
+          <div>
+            <div class="run-time">12 FEB 2026 / 04:00</div>
+            <div class="run-status success">Success</div>
+          </div>
+          <div class="run-score">80</div>
+        </div>
+
+        <div class="run-item">
+          <div>
+            <div class="run-time">11 FEB 2026 / 22:00</div>
+            <div class="run-status success">Success</div>
+          </div>
+          <div class="run-score">77</div>
+        </div>
+
+        <div class="run-item">
+          <div>
+            <div class="run-time">11 FEB 2026 / 16:00</div>
+            <div class="run-status failed">Failed</div>
+          </div>
+          <div class="run-score red" style="color:var(--red)">--</div>
+        </div>
+
+        <div class="run-item">
+          <div>
+            <div class="run-time">11 FEB 2026 / 10:00</div>
+            <div class="run-status success">Success</div>
+          </div>
+          <div class="run-score">75</div>
+        </div>
+
+        <div class="run-item">
+          <div>
+            <div class="run-time">11 FEB 2026 / 04:00</div>
+            <div class="run-status success">Success</div>
+          </div>
+          <div class="run-score">74</div>
+        </div>
+
+        <div class="run-item">
+          <div>
+            <div class="run-time">10 FEB 2026 / 22:00</div>
+            <div class="run-status success">Success</div>
+          </div>
+          <div class="run-score">73</div>
+        </div>
+
+        <div class="run-item">
+          <div>
+            <div class="run-time">10 FEB 2026 / 16:00</div>
+            <div class="run-status success">Success</div>
+          </div>
+          <div class="run-score">71</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================
+       SETTINGS
+       ===================================================== -->
+  <div class="page" id="page-settings">
+
+    <div class="dateline">
+      Configuration
+      <span class="edition">Local Settings</span>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Oracle Configuration</div>
+
+      <div class="form-row">
+        <label class="form-label">
+          Contract Address
+          <span class="form-label-sub">Sepolia deployment</span>
+        </label>
+        <input type="text" class="form-input mono" value="0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE" readonly>
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">
+          RPC Endpoint
+          <span class="form-label-sub">Ethereum Sepolia</span>
+        </label>
+        <input type="text" class="form-input mono" placeholder="https://eth-sepolia.g.alchemy.com/v2/...">
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">
+          Update Frequency
+          <span class="form-label-sub">Pipeline run interval</span>
+        </label>
+        <select class="form-select">
+          <option>Every 6 hours</option>
+          <option>Every 12 hours</option>
+          <option>Every 24 hours</option>
+          <option>Manual only</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">
+          Wallet Address
+          <span class="form-label-sub">For transaction signing</span>
+        </label>
+        <input type="text" class="form-input mono" placeholder="0x...">
+      </div>
+    </div>
+
+    <hr class="hr">
+
+    <div class="settings-section">
+      <div class="settings-section-title">Data Sources</div>
+
+      <div class="form-row">
+        <label class="form-label">Discord</label>
+        <label class="toggle">
+          <input type="checkbox" checked>
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </label>
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">Telegram</label>
+        <label class="toggle">
+          <input type="checkbox" checked>
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </label>
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">Governance Forums</label>
+        <label class="toggle">
+          <input type="checkbox" checked>
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </label>
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">Twitter / X</label>
+        <label class="toggle">
+          <input type="checkbox">
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </label>
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">Reddit</label>
+        <label class="toggle">
+          <input type="checkbox">
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </label>
+      </div>
+    </div>
+
+    <hr class="hr">
+
+    <div class="settings-section">
+      <div class="settings-section-title">Classification</div>
+
+      <div class="form-row">
+        <label class="form-label">
+          LLM Provider
+          <span class="form-label-sub">For sentiment classification</span>
+        </label>
+        <select class="form-select">
+          <option>OpenAI GPT-4o</option>
+          <option>Anthropic Claude 3.5</option>
+          <option>Local (Ollama)</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">
+          API Key
+          <span class="form-label-sub">Stored locally only</span>
+        </label>
+        <input type="password" class="form-input mono" placeholder="sk-...">
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">
+          Confidence Threshold
+          <span class="form-label-sub">Min. classification confidence</span>
+        </label>
+        <input type="text" class="form-input mono" value="0.75" style="max-width:120px;">
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">
+          Spam Filter
+          <span class="form-label-sub">Auto-remove low quality messages</span>
+        </label>
+        <label class="toggle">
+          <input type="checkbox" checked>
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </label>
+      </div>
+    </div>
+
+    <hr class="hr">
+
+    <div class="settings-section">
+      <div class="settings-section-title">Notifications</div>
+
+      <div class="form-row">
+        <label class="form-label">
+          Score Drop Alert
+          <span class="form-label-sub">Notify when score drops > 10 points</span>
+        </label>
+        <label class="toggle">
+          <input type="checkbox" checked>
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </label>
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">
+          Pipeline Failures
+          <span class="form-label-sub">Alert on CRE run errors</span>
+        </label>
+        <label class="toggle">
+          <input type="checkbox" checked>
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </label>
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">
+          Webhook URL
+          <span class="form-label-sub">POST notifications</span>
+        </label>
+        <input type="text" class="form-input mono" placeholder="https://hooks.slack.com/...">
+      </div>
+    </div>
+
+    <div style="margin-top:32px;">
+      <button class="btn-save" onclick="saveSettings()">Save Configuration</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<footer class="page-footer">
+  <div class="footer-inner">
+    <div class="footer-left">Inspired by: Swiss Design (proportions) + Financial Times (editorial authority)</div>
+    <div class="footer-right">
+      <a href="https://sepolia.etherscan.io/address/0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE" target="_blank" rel="noopener">View on Etherscan</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const PROJECTS = {
+  chainlink: {
+    name: 'Chainlink',
+    score: 82,
+    prevScore: 79,
+    trend: '+3.2',
+    trendDir: 'up',
+    sources: 847,
+    summary: 'Strong positive momentum driven by CCIP expansion and CRE adoption. Community praise significantly outweighs isolated technical complaints. Developer engagement remains high across documentation and tooling channels.',
+    dropCap: 'S',
+    categories: { praise: 342, feature_request: 118, question: 152, bug: 58, complaint: 41 },
+    sentiment: { positive: 68, neutral: 22, negative: 10 }
+  },
+  uniswap: {
+    name: 'Uniswap',
+    score: 65,
+    prevScore: 67,
+    trend: '-2.1',
+    trendDir: 'down',
+    sources: 923,
+    summary: 'Mixed sentiment landscape. V4 hooks generating developer excitement but the fee switch governance debate is creating notable friction among token holders. Liquidity provider satisfaction remains a concern.',
+    dropCap: 'M',
+    categories: { praise: 210, feature_request: 185, question: 203, bug: 142, complaint: 183 },
+    sentiment: { positive: 45, neutral: 32, negative: 23 }
+  },
+  aave: {
+    name: 'Aave',
+    score: 78,
+    prevScore: 76,
+    trend: '+1.8',
+    trendDir: 'up',
+    sources: 512,
+    summary: 'Lending protocol maintaining solid community trust. V3 safety module updates are driving positive engagement. GHO stablecoin adoption progressing with cautious optimism among DeFi participants.',
+    dropCap: 'L',
+    categories: { praise: 198, feature_request: 87, question: 112, bug: 62, complaint: 53 },
+    sentiment: { positive: 62, neutral: 26, negative: 12 }
+  },
+  base: {
+    name: 'Base',
+    score: 71,
+    prevScore: 70,
+    trend: '+0.5',
+    trendDir: 'up',
+    sources: 634,
+    summary: 'Layer 2 adoption growing steadily. Developer tooling and onboarding experience receiving consistent praise. Gas cost concerns declining as network optimizations take effect.',
+    dropCap: 'L',
+    categories: { praise: 215, feature_request: 142, question: 138, bug: 75, complaint: 64 },
+    sentiment: { positive: 55, neutral: 30, negative: 15 }
+  },
+  arbitrum: {
+    name: 'Arbitrum',
+    score: 58,
+    prevScore: 63,
+    trend: '-4.7',
+    trendDir: 'down',
+    sources: 478,
+    summary: 'DAO governance concerns and ARB token unlock pressure weighing on community sentiment. Technical performance and developer experience still receive praise, but treasury management debates dominate discussion.',
+    dropCap: 'D',
+    categories: { praise: 112, feature_request: 98, question: 87, bug: 68, complaint: 113 },
+    sentiment: { positive: 38, neutral: 28, negative: 34 }
+  }
+};
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function navigateTo(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+
+  const page = document.getElementById('page-' + pageId);
+  if (page) {
+    page.classList.remove('active');
+    // Force reflow for animation
+    void page.offsetWidth;
+    page.classList.add('active');
+  }
+
+  document.querySelectorAll('.nav-link').forEach(n => {
+    if (n.dataset.page === pageId) n.classList.add('active');
+  });
+}
+
+document.querySelectorAll('.nav-link').forEach(link => {
+  link.addEventListener('click', () => navigateTo(link.dataset.page));
+});
+
+// ============================================================
+// SHOW PROJECT DETAIL
+// ============================================================
+function showProject(projectId) {
+  const p = PROJECTS[projectId];
+  if (!p) return;
+
+  document.getElementById('detail-score').textContent = p.score;
+  document.getElementById('detail-score').className = 'detail-score ' + getScoreClass(p.score);
+  document.getElementById('detail-trend').textContent = p.trend + ' from last epoch';
+  document.getElementById('detail-trend').className = 'detail-score-change ' + p.trendDir;
+  document.getElementById('detail-name').textContent = p.name;
+  document.getElementById('detail-summary').innerHTML =
+    '<span class="drop-cap">' + p.dropCap + '</span>' +
+    p.summary.substring(1);
+
+  navigateTo('detail');
+}
+
+function getScoreClass(score) {
+  if (score >= 70) return 'score-positive';
+  if (score >= 50) return 'score-neutral';
+  return 'score-negative';
+}
+
+// ============================================================
+// DATELINE
+// ============================================================
+function formatDateline() {
+  const now = new Date();
+  const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const day = now.getDate();
+  const month = months[now.getMonth()];
+  const year = now.getFullYear();
+  let hours = now.getHours();
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12 || 12;
+  return day + ' ' + month + ' ' + year + ' | ' + hours + ':' + minutes + ' ' + ampm;
+}
+
+function updateDatelines() {
+  const d = formatDateline();
+  const el1 = document.getElementById('dateline-date');
+  const el2 = document.getElementById('detail-dateline');
+  const el3 = document.getElementById('workflow-dateline');
+  if (el1) el1.textContent = d;
+  if (el2) el2.textContent = d;
+  if (el3) el3.textContent = d;
+}
+
+updateDatelines();
+setInterval(updateDatelines, 60000);
+
+// ============================================================
+// COPY CONTRACT
+// ============================================================
+function copyContract() {
+  navigator.clipboard.writeText('0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE').then(() => {
+    const badge = document.querySelector('.contract-badge');
+    const original = badge.textContent;
+    badge.textContent = 'Copied to clipboard';
+    setTimeout(() => {
+      badge.innerHTML = '0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE';
+    }, 1500);
+  });
+}
+
+// ============================================================
+// SAVE SETTINGS (demo)
+// ============================================================
+function saveSettings() {
+  const btn = document.querySelector('.btn-save');
+  const original = btn.textContent;
+  btn.textContent = 'SAVED';
+  btn.style.opacity = '0.7';
+  setTimeout(() => {
+    btn.textContent = original;
+    btn.style.opacity = '1';
+  }, 1500);
+}
+
+// ============================================================
+// KEYBOARD NAVIGATION
+// ============================================================
+document.addEventListener('keydown', (e) => {
+  if (e.key === '1') navigateTo('dashboard');
+  if (e.key === '2') navigateTo('detail');
+  if (e.key === '3') navigateTo('workflow');
+  if (e.key === '4') navigateTo('settings');
+});
+</script>
+
+</body>
+</html>

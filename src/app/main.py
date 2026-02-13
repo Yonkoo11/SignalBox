@@ -9,7 +9,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from app.config import config
 from app.database import init_db
-from app.routers import auth, feedback, settings, billing
+from app.routers import auth, feedback, settings, billing, sentiment
 from app.tasks.scheduler import start_scheduler, stop_scheduler
 from app.services.telegram_bot import start_bot, stop_bot
 
@@ -57,6 +57,7 @@ app.include_router(auth.router)
 app.include_router(feedback.router)
 app.include_router(settings.router)
 app.include_router(billing.router)
+app.include_router(sentiment.router)
 
 # Static files
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
@@ -66,6 +67,12 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 async def root():
     """Serve landing page."""
     return FileResponse(STATIC_DIR / "index.html")
+
+
+@app.get("/dashboard")
+async def dashboard():
+    """Serve sentiment oracle dashboard."""
+    return FileResponse(STATIC_DIR / "dashboard.html")
 
 
 @app.get("/health")

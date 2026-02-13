@@ -1,0 +1,12 @@
+{
+  "signalboxApiUrl": "http://localhost:8000",
+  "anthropicModel": "claude-haiku-4-5-20251001",
+  "projects": ["chainlink", "uniswap", "aave", "base", "arbitrum"],
+  "evms": [
+    {
+      "oracleAddress": "0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE",
+      "chainSelectorName": "ethereum-testnet-sepolia",
+      "gasLimit": "800000"
+    }
+  ]
+}

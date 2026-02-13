@@ -2,6 +2,7 @@
 .env
 *.env
 .env.*
+secrets.yaml
 
 # Python
 __pycache__/
@@ -38,3 +39,6 @@ htmlcov/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# CRE build artifacts
+workflow/tmp.*

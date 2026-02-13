@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SignalBox Redesign Proposals</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg-deep:#0C0C0E;--bg:#111114;--surface:#1A1A1F;--border:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.1);--text:#E8E8EC;--text-2:#8A8A96;--text-3:#6B6B76;--accent:#FF6B2B}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--bg-deep);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+.catalog-header{max-width:1400px;margin:0 auto;padding:40px 24px 0}
+h1{font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;margin-bottom:6px}
+.subtitle{font-size:15px;color:var(--text-2);margin-bottom:32px;line-height:1.5}
+.tabs{display:flex;gap:8px;margin-bottom:24px}
+.tab{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;padding:10px 20px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text-2);cursor:pointer;transition:color .15s,border-color .15s,background .15s}
+.tab:hover{color:var(--text);border-color:var(--border-strong)}
+.tab.active{background:var(--accent);color:#FAFAFA;border-color:var(--accent)}
+.proposal-info{max-width:1400px;margin:0 auto;padding:0 24px}
+.info-card{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:20px 24px;margin-bottom:20px;display:none}
+.info-card.active{display:block}
+.info-card h2{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;margin-bottom:8px}
+.info-card p{font-size:14px;color:var(--text-2);line-height:1.6}
+.info-card .features{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.feature-tag{font-family:'JetBrains Mono',monospace;font-size:10px;padding:4px 10px;background:rgba(255,107,43,0.1);color:var(--accent);border-radius:2px;text-transform:uppercase;letter-spacing:.5px}
+.iframe-wrap{max-width:1400px;margin:0 auto;padding:0 24px 40px}
+.iframe-container{border:1px solid var(--border);border-radius:4px;overflow:hidden;height:calc(100vh - 320px);min-height:500px;display:none}
+.iframe-container.active{display:block}
+iframe{width:100%;height:100%;border:none}
+</style>
+</head>
+<body>
+<div class="catalog-header">
+    <h1>SignalBox Dashboard Redesign</h1>
+    <p class="subtitle">Three proposals for a data-dense, long-scroll dashboard. Pick the one that feels right.</p>
+    <div class="tabs">
+        <button class="tab" onclick="show('a',this)">A: Slide-Over Detail</button>
+        <button class="tab" onclick="show('b',this)">B: Hash Routing</button>
+        <button class="tab active" onclick="show('h',this)">Hybrid: Best of Both</button>
+    </div>
+</div>
+<div class="proposal-info">
+    <div class="info-card" id="info-a">
+        <h2>Proposal A: Long-Scroll + Slide-Over</h2>
+        <p>Single scrollable page with 6 zones. Click any project to open a slide-over panel from the right. No URL routing -- pure state. Settings via Cmd+K.</p>
+        <div class="features">
+            <span class="feature-tag">6-zone scroll</span>
+            <span class="feature-tag">slide-over panel</span>
+            <span class="feature-tag">comparison grid</span>
+            <span class="feature-tag">vertical feed</span>
+            <span class="feature-tag">priority filter</span>
+            <span class="feature-tag">countdown timer</span>
+        </div>
+    </div>
+    <div class="info-card" id="info-b">
+        <h2>Proposal B: Long-Scroll + Hash Routing</h2>
+        <p>Same long-scroll home, but clicking a project navigates to #/project/name (dedicated page). Browser back/forward works. URLs are shareable and bookmarkable. Includes influencer leaderboard.</p>
+        <div class="features">
+            <span class="feature-tag">hash routing</span>
+            <span class="feature-tag">shareable urls</span>
+            <span class="feature-tag">browser history</span>
+            <span class="feature-tag">influencer board</span>
+            <span class="feature-tag">full project page</span>
+            <span class="feature-tag">crossfade transitions</span>
+        </div>
+    </div>
+    <div class="info-card active" id="info-h">
+        <h2>Hybrid: Slide-Over + Hash Routing + Full Pages</h2>
+        <p>Best of both worlds. Click a project on home for a quick slide-over preview without losing scroll position. Hit "Full Report" in the slide-over to navigate to a dedicated project page with shareable URL. Browser history works. Includes influencer leaderboard.</p>
+        <div class="features">
+            <span class="feature-tag">slide-over preview</span>
+            <span class="feature-tag">hash routing</span>
+            <span class="feature-tag">shareable urls</span>
+            <span class="feature-tag">influencer board</span>
+            <span class="feature-tag">full project page</span>
+            <span class="feature-tag">quick peek + deep dive</span>
+        </div>
+    </div>
+</div>
+<div class="iframe-wrap">
+    <div class="iframe-container" id="frame-a"><iframe src="/proposals/proposal-a.html" loading="lazy"></iframe></div>
+    <div class="iframe-container" id="frame-b"><iframe src="/proposals/proposal-b.html" loading="lazy"></iframe></div>
+    <div class="iframe-container active" id="frame-h"><iframe src="/proposals/proposal-hybrid.html" loading="lazy"></iframe></div>
+</div>
+<script>
+function show(id, btn) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.info-card').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.iframe-container').forEach(f => f.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('info-' + id).classList.add('active');
+    document.getElementById('frame-' + id).classList.add('active');
+}
+</script>
+</body>
+</html>

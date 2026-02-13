@@ -1,0 +1,1899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SignalBox - On-Chain Social Sentiment Oracle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ========== RESET & BASE ========== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --black: #09090b;
+  --black-raised: #0f0f11;
+  --black-surface: #151517;
+  --black-border: #1e1e22;
+  --black-border-subtle: #161618;
+  --teal: #0AFFED;
+  --teal-dim: rgba(10, 255, 237, 0.12);
+  --teal-dimmer: rgba(10, 255, 237, 0.06);
+  --white: #fafafa;
+  --white-secondary: #a1a1aa;
+  --white-tertiary: #52525b;
+  --praise: #10b981;
+  --feature-request: #0AFFED;
+  --question: #a78bfa;
+  --bug: #ef4444;
+  --complaint: #f59e0b;
+  --radius-none: 0px;
+  --radius-sm: 4px;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --sidebar-width: 220px;
+  --sidebar-collapsed: 56px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+html {
+  font-size: 15px;
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--black);
+  color: var(--white);
+  line-height: 1.5;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+input { font-family: inherit; color: inherit; background: none; border: none; outline: none; }
+
+/* Tabular nums on ALL numbers */
+.num, [data-num], .score, .stat-value, .metric, .table-cell-num, .feed-engagement {
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono);
+}
+
+/* Touch targets */
+button, a, input, [role="button"] {
+  min-height: 44px;
+  min-width: 44px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Focus visible */
+:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--black-border); border-radius: var(--radius-sm); }
+::-webkit-scrollbar-thumb:hover { background: var(--white-tertiary); }
+
+/* ========== SKELETON SHIMMER ========== */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--black-surface) 25%, var(--black-border) 50%, var(--black-surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+/* ========== DNA BADGE ========== */
+.dna-badge {
+  position: fixed;
+  top: 12px;
+  right: 16px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--white-tertiary);
+  background: var(--black-surface);
+  border: 1px solid var(--black-border);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  z-index: 1000;
+  user-select: none;
+  min-height: auto;
+  min-width: auto;
+}
+
+/* ========== DEMO BANNER ========== */
+.demo-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: var(--teal);
+  color: var(--black);
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 5px 0;
+  z-index: 999;
+  letter-spacing: 0.04em;
+}
+
+/* ========== LAYOUT ========== */
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  padding-top: 26px; /* demo banner */
+}
+
+/* ========== SIDEBAR ========== */
+.sidebar {
+  position: fixed;
+  top: 26px;
+  left: 0;
+  bottom: 0;
+  width: var(--sidebar-width);
+  background: var(--black);
+  border-right: 1px solid var(--black-border-subtle);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  transition: width 0.4s var(--ease);
+  overflow: hidden;
+}
+
+.sidebar.collapsed {
+  width: var(--sidebar-collapsed);
+}
+
+.sidebar-header {
+  padding: 20px 16px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.sidebar-logo {
+  width: 24px;
+  height: 24px;
+  background: var(--teal);
+  border-radius: var(--radius-none);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-logo svg {
+  width: 14px;
+  height: 14px;
+  fill: var(--black);
+}
+
+.sidebar-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  opacity: 1;
+  transition: opacity 0.3s var(--ease);
+}
+
+.sidebar.collapsed .sidebar-title { opacity: 0; pointer-events: none; }
+
+.sidebar-nav {
+  flex: 1;
+  padding: 8px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--white-secondary);
+  transition: color 0.25s var(--ease), background 0.25s var(--ease);
+  white-space: nowrap;
+  min-height: 44px;
+}
+
+.nav-item:hover {
+  color: var(--white);
+  background: var(--black-surface);
+}
+
+.nav-item.active {
+  color: var(--teal);
+  background: var(--teal-dimmer);
+}
+
+.nav-item svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.5;
+}
+
+.nav-label {
+  opacity: 1;
+  transition: opacity 0.3s var(--ease);
+}
+
+.sidebar.collapsed .nav-label { opacity: 0; pointer-events: none; }
+
+.sidebar-footer {
+  padding: 12px 8px;
+  border-top: 1px solid var(--black-border-subtle);
+  flex-shrink: 0;
+}
+
+.sidebar-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  color: var(--white-tertiary);
+  transition: color 0.25s var(--ease), background 0.25s var(--ease);
+}
+
+.sidebar-toggle:hover {
+  color: var(--white-secondary);
+  background: var(--black-surface);
+}
+
+.sidebar-toggle svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.5;
+  transition: transform 0.4s var(--ease);
+}
+
+.sidebar.collapsed .sidebar-toggle svg {
+  transform: rotate(180deg);
+}
+
+/* ========== MAIN CONTENT ========== */
+.main-content {
+  margin-left: var(--sidebar-width);
+  flex: 1;
+  padding: 24px 28px 60px;
+  transition: margin-left 0.4s var(--ease);
+  min-height: calc(100vh - 26px);
+}
+
+.sidebar.collapsed ~ .main-content {
+  margin-left: var(--sidebar-collapsed);
+}
+
+/* ========== PAGE HEADER ========== */
+.page-header {
+  margin-bottom: 24px;
+}
+
+.page-header h1 {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--white);
+}
+
+.page-header p {
+  font-size: 13px;
+  color: var(--white-tertiary);
+  margin-top: 4px;
+}
+
+/* ========== BENTO GRID ========== */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 12px;
+}
+
+.bento-cell {
+  background: var(--black-raised);
+  border: 1px solid var(--black-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  transition: border-color 0.3s var(--ease);
+}
+
+.bento-cell:hover {
+  border-color: var(--black-border);
+}
+
+/* cell sizes */
+.cell-3 { grid-column: span 3; }
+.cell-4 { grid-column: span 4; }
+.cell-5 { grid-column: span 5; }
+.cell-6 { grid-column: span 6; }
+.cell-7 { grid-column: span 7; }
+.cell-8 { grid-column: span 8; }
+.cell-12 { grid-column: span 12; }
+
+@media (max-width: 1100px) {
+  .cell-3, .cell-4, .cell-5 { grid-column: span 6; }
+  .cell-7, .cell-8 { grid-column: span 12; }
+}
+
+@media (max-width: 700px) {
+  .bento-grid { grid-template-columns: 1fr; }
+  .bento-cell { grid-column: span 1 !important; }
+  .sidebar { width: var(--sidebar-collapsed); }
+  .sidebar .sidebar-title, .sidebar .nav-label { opacity: 0; pointer-events: none; }
+  .main-content { margin-left: var(--sidebar-collapsed) !important; padding: 16px 12px 60px; }
+}
+
+/* ========== AGGREGATE STATS BAR ========== */
+.stats-bar {
+  display: flex;
+  gap: 0;
+  background: var(--black-raised);
+  border: 1px solid var(--black-border-subtle);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.stat-block {
+  flex: 1;
+  padding: 16px 20px;
+  border-right: 1px solid var(--black-border-subtle);
+  min-width: 0;
+}
+
+.stat-block:last-child { border-right: none; }
+
+.stat-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--white-tertiary);
+  margin-bottom: 4px;
+  font-family: var(--font-mono);
+}
+
+.stat-value {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--white);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-value.teal { color: var(--teal); }
+
+/* ========== PROJECT SENTIMENT CARD ========== */
+.project-card {
+  cursor: pointer;
+}
+
+.project-card-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.project-name {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.project-score {
+  font-family: var(--font-mono);
+  font-size: 32px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.score-positive { color: var(--praise); }
+.score-neutral { color: var(--complaint); }
+.score-low { color: var(--bug); }
+
+.project-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 12px;
+}
+
+.category-pill {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.02em;
+  min-height: auto;
+  min-width: auto;
+}
+
+.category-pill.praise { background: rgba(16, 185, 129, 0.12); color: var(--praise); }
+.category-pill.feature_request { background: rgba(10, 255, 237, 0.12); color: var(--feature-request); }
+.category-pill.question { background: rgba(167, 139, 250, 0.12); color: var(--question); }
+.category-pill.bug { background: rgba(239, 68, 68, 0.12); color: var(--bug); }
+.category-pill.complaint { background: rgba(245, 158, 11, 0.12); color: var(--complaint); }
+
+.project-bar {
+  width: 100%;
+  height: 3px;
+  background: var(--black-border);
+  border-radius: var(--radius-sm);
+  margin-top: 14px;
+  overflow: hidden;
+  display: flex;
+}
+
+.project-bar-fill {
+  height: 100%;
+  transition: width 0.6s var(--ease);
+}
+
+/* ========== FEED LIST ========== */
+.feed-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.feed-item {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--black-border-subtle);
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.feed-item:last-child { border-bottom: none; }
+
+.feed-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 7px;
+}
+
+.feed-dot.praise { background: var(--praise); }
+.feed-dot.feature_request { background: var(--feature-request); }
+.feed-dot.question { background: var(--question); }
+.feed-dot.bug { background: var(--bug); }
+.feed-dot.complaint { background: var(--complaint); }
+
+.feed-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.feed-text {
+  font-size: 13px;
+  color: var(--white);
+  line-height: 1.45;
+  margin-bottom: 4px;
+}
+
+.feed-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--white-tertiary);
+  font-family: var(--font-mono);
+}
+
+.feed-engagement {
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono);
+}
+
+/* ========== PAGE: PROJECT DETAIL ========== */
+.timeline-chart {
+  width: 100%;
+  height: 180px;
+  position: relative;
+}
+
+.timeline-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.doughnut-wrap {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.doughnut-canvas {
+  width: 140px;
+  height: 140px;
+  flex-shrink: 0;
+}
+
+.doughnut-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--white-secondary);
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legend-value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--white);
+  margin-left: auto;
+}
+
+/* AI Summary card */
+.ai-summary {
+  font-size: 13px;
+  color: var(--white-secondary);
+  line-height: 1.6;
+}
+
+.ai-summary-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--teal);
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+  display: block;
+}
+
+/* Oracle data */
+.oracle-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--black-border-subtle);
+  font-size: 13px;
+}
+
+.oracle-row:last-child { border-bottom: none; }
+
+.oracle-label {
+  color: var(--white-tertiary);
+}
+
+.oracle-value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--white);
+  font-size: 12px;
+}
+
+.oracle-value.teal { color: var(--teal); }
+
+/* ========== PAGE: WORKFLOW ========== */
+.pipeline {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 20px 0;
+  overflow-x: auto;
+}
+
+.pipeline-step {
+  flex-shrink: 0;
+  text-align: center;
+  padding: 16px 24px;
+  background: var(--black-surface);
+  border: 1px solid var(--black-border);
+  border-radius: var(--radius-sm);
+  min-width: 140px;
+}
+
+.pipeline-step-icon {
+  font-size: 20px;
+  margin-bottom: 8px;
+  color: var(--teal);
+  font-family: var(--font-mono);
+}
+
+.pipeline-step-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--white);
+  letter-spacing: 0.02em;
+}
+
+.pipeline-step-sub {
+  font-size: 10px;
+  color: var(--white-tertiary);
+  margin-top: 2px;
+}
+
+.pipeline-arrow {
+  flex-shrink: 0;
+  width: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--white-tertiary);
+}
+
+.pipeline-arrow svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.5;
+}
+
+/* Run history table */
+.run-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.run-table th {
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--white-tertiary);
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--black-border);
+  font-weight: 500;
+}
+
+.run-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--black-border-subtle);
+  color: var(--white-secondary);
+}
+
+.run-table tr:hover td {
+  background: var(--black-surface);
+}
+
+.run-table .mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+}
+
+/* Status dots */
+.status-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+.status-dot.success { background: var(--praise); }
+.status-dot.running { background: var(--teal); animation: pulse 2s ease-in-out infinite; }
+.status-dot.failed { background: var(--bug); }
+.status-dot.pending { background: var(--white-tertiary); }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ========== PAGE: SETTINGS ========== */
+.settings-section {
+  margin-bottom: 28px;
+}
+
+.settings-section-title {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--white);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--black-border-subtle);
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  font-size: 13px;
+  min-height: 44px;
+}
+
+.settings-label {
+  color: var(--white-secondary);
+}
+
+.settings-value {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--white);
+}
+
+.input-field {
+  background: var(--black-surface);
+  border: 1px solid var(--black-border);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--white);
+  width: 320px;
+  min-height: 36px;
+  transition: border-color 0.25s var(--ease);
+}
+
+.input-field:focus {
+  border-color: var(--teal);
+  outline: none;
+}
+
+.input-field::placeholder {
+  color: var(--white-tertiary);
+}
+
+/* Toggle switch */
+.toggle-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toggle {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  background: var(--black-border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.25s var(--ease);
+  min-width: 36px;
+  min-height: 20px;
+}
+
+.toggle.on {
+  background: var(--teal);
+}
+
+.toggle-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: var(--white);
+  border-radius: 50%;
+  transition: transform 0.25s var(--ease);
+}
+
+.toggle.on .toggle-knob {
+  transform: translateX(16px);
+}
+
+/* Project tags in settings */
+.project-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--black-surface);
+  border: 1px solid var(--black-border);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--white);
+  min-height: auto;
+}
+
+.project-tag-remove {
+  color: var(--white-tertiary);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  min-height: auto;
+  min-width: auto;
+  padding: 2px;
+  transition: color 0.2s var(--ease);
+}
+
+.project-tag-remove:hover { color: var(--bug); }
+
+.project-tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+/* Button */
+.btn {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  transition: background 0.25s var(--ease), color 0.25s var(--ease);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-primary {
+  background: var(--teal);
+  color: var(--black);
+  font-weight: 500;
+}
+
+.btn-primary:hover {
+  background: #08e6d5;
+}
+
+.btn-ghost {
+  border: 1px solid var(--black-border);
+  color: var(--white-secondary);
+}
+
+.btn-ghost:hover {
+  border-color: var(--white-tertiary);
+  color: var(--white);
+}
+
+/* ========== CELL TITLES ========== */
+.cell-title {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--white-tertiary);
+  margin-bottom: 14px;
+}
+
+/* ========== SCORE BADGE (for detail page) ========== */
+.score-badge-large {
+  font-family: var(--font-mono);
+  font-size: 56px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--teal);
+}
+
+.score-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--white-tertiary);
+  margin-top: 4px;
+}
+
+/* ========== BACK BUTTON ========== */
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--white-tertiary);
+  margin-bottom: 16px;
+  transition: color 0.2s var(--ease);
+  padding: 4px 0;
+}
+
+.back-btn:hover { color: var(--white); }
+
+.back-btn svg {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.5;
+}
+
+/* ========== CONTRACT ADDRESS ========== */
+.contract-address {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--white-tertiary);
+  padding: 8px 12px;
+  background: var(--black-surface);
+  border: 1px solid var(--black-border-subtle);
+  border-radius: var(--radius-sm);
+  display: inline-block;
+  word-break: break-all;
+  letter-spacing: 0.01em;
+}
+
+/* ========== FOOTER ========== */
+.app-footer {
+  padding: 20px 28px;
+  margin-left: var(--sidebar-width);
+  border-top: 1px solid var(--black-border-subtle);
+  font-size: 11px;
+  color: var(--white-tertiary);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: margin-left 0.4s var(--ease);
+}
+
+.sidebar.collapsed ~ .app-footer {
+  margin-left: var(--sidebar-collapsed);
+}
+
+/* ========== EMPTY STATE ========== */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--white-tertiary);
+}
+
+.empty-state-title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  color: var(--white-secondary);
+  margin-bottom: 6px;
+}
+
+.empty-state-text {
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+/* ========== PAGE VISIBILITY ========== */
+.page { display: none; }
+.page.active { display: block; }
+
+/* ========== DETAIL VIEW HEADING ========== */
+.detail-heading {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.detail-project-name {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-transform: capitalize;
+}
+
+.detail-score-inline {
+  font-family: var(--font-mono);
+  font-size: 28px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Trend indicator */
+.trend {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.trend.up { color: var(--praise); }
+.trend.down { color: var(--bug); }
+
+/* ========== ADD PROJECT INPUT ========== */
+.add-project-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Code block style */
+.code-block {
+  background: var(--black-surface);
+  border: 1px solid var(--black-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--white-secondary);
+  overflow-x: auto;
+  line-height: 1.6;
+}
+
+.code-block .keyword { color: var(--teal); }
+.code-block .string { color: var(--praise); }
+.code-block .comment { color: var(--white-tertiary); }
+</style>
+</head>
+<body>
+
+<!-- DNA Badge -->
+<div class="dna-badge">DNA-B-S-M-D-X</div>
+
+<!-- Demo Banner -->
+<div class="demo-banner">DEMO MODE -- Displaying sample sentiment data from Chainlink CRE ecosystem</div>
+
+<!-- App Layout -->
+<div class="app-layout">
+
+  <!-- Sidebar -->
+  <nav class="sidebar" id="sidebar" aria-label="Main navigation">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <svg viewBox="0 0 16 16"><rect x="2" y="2" width="5" height="5"/><rect x="9" y="2" width="5" height="5"/><rect x="2" y="9" width="5" height="5"/><rect x="9" y="9" width="5" height="5"/></svg>
+      </div>
+      <span class="sidebar-title">SignalBox</span>
+    </div>
+
+    <div class="sidebar-nav">
+      <button class="nav-item active" onclick="navigateTo('dashboard')" aria-label="Dashboard">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="0"/><rect x="14" y="3" width="7" height="7" rx="0"/><rect x="3" y="14" width="7" height="7" rx="0"/><rect x="14" y="14" width="7" height="7" rx="0"/></svg>
+        <span class="nav-label">Dashboard</span>
+      </button>
+      <button class="nav-item" onclick="navigateTo('detail')" aria-label="Project Detail">
+        <svg viewBox="0 0 24 24"><path d="M3 12h4l3-9 4 18 3-9h4"/></svg>
+        <span class="nav-label">Project Detail</span>
+      </button>
+      <button class="nav-item" onclick="navigateTo('workflow')" aria-label="Workflow">
+        <svg viewBox="0 0 24 24"><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/><circle cx="12" cy="12" r="4"/></svg>
+        <span class="nav-label">Workflow</span>
+      </button>
+      <button class="nav-item" onclick="navigateTo('settings')" aria-label="Settings">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        <span class="nav-label">Settings</span>
+      </button>
+    </div>
+
+    <div class="sidebar-footer">
+      <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+        <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-content" id="main-content">
+
+    <!-- ============ DASHBOARD PAGE ============ -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <h1>Sentiment Oracle</h1>
+        <p>On-chain social sentiment scores for monitored protocols</p>
+      </div>
+
+      <!-- Aggregate Stats -->
+      <div class="stats-bar" id="stats-bar">
+        <div class="stat-block">
+          <div class="stat-label">Projects</div>
+          <div class="stat-value num">5</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-label">Avg Score</div>
+          <div class="stat-value teal num">70.8</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-label">Feed Items</div>
+          <div class="stat-value num">347</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-label">Last Oracle Write</div>
+          <div class="stat-value num" style="font-size:14px">2 min ago</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-label">Network</div>
+          <div class="stat-value" style="font-size:13px">Sepolia</div>
+        </div>
+      </div>
+
+      <!-- Bento Grid -->
+      <div class="bento-grid" id="dashboard-grid">
+        <!-- Filled by JS -->
+      </div>
+    </div>
+
+    <!-- ============ PROJECT DETAIL PAGE ============ -->
+    <div class="page" id="page-detail">
+      <button class="back-btn" onclick="navigateTo('dashboard')">
+        <svg viewBox="0 0 24 24"><path d="M19 12H5m7-7l-7 7 7 7"/></svg>
+        Back to Dashboard
+      </button>
+
+      <div class="detail-heading">
+        <span class="detail-project-name" id="detail-project-name">Chainlink</span>
+        <span class="detail-score-inline score-positive" id="detail-score">82</span>
+        <span class="trend up" id="detail-trend">+3.2 (7d)</span>
+      </div>
+
+      <div class="bento-grid">
+        <!-- Score Timeline -->
+        <div class="bento-cell cell-8">
+          <div class="cell-title">Score Timeline (30d)</div>
+          <div class="timeline-chart">
+            <canvas id="timeline-canvas" class="timeline-canvas"></canvas>
+          </div>
+        </div>
+
+        <!-- Category Breakdown -->
+        <div class="bento-cell cell-4">
+          <div class="cell-title">Category Breakdown</div>
+          <div class="doughnut-wrap">
+            <canvas id="doughnut-canvas" class="doughnut-canvas" width="140" height="140"></canvas>
+            <div class="doughnut-legend" id="doughnut-legend"></div>
+          </div>
+        </div>
+
+        <!-- AI Summary -->
+        <div class="bento-cell cell-5">
+          <div class="cell-title">AI Summary</div>
+          <div class="ai-summary">
+            <span class="ai-summary-tag">GENERATED BY CRE WORKFLOW</span>
+            <span id="ai-summary-text">Strong positive sentiment driven by CCIP adoption and CRE developer experience. Minor friction points around documentation clarity and M1 Mac compatibility. Community enthusiasm for cross-chain capabilities is the dominant signal. Recommend prioritizing Solana support based on feature request volume.</span>
+          </div>
+        </div>
+
+        <!-- Oracle Data -->
+        <div class="bento-cell cell-3">
+          <div class="cell-title">Oracle Data</div>
+          <div id="oracle-data">
+            <div class="oracle-row">
+              <span class="oracle-label">Score</span>
+              <span class="oracle-value teal" id="oracle-score">82</span>
+            </div>
+            <div class="oracle-row">
+              <span class="oracle-label">Confidence</span>
+              <span class="oracle-value" id="oracle-confidence">0.94</span>
+            </div>
+            <div class="oracle-row">
+              <span class="oracle-label">Block</span>
+              <span class="oracle-value" id="oracle-block">7,291,483</span>
+            </div>
+            <div class="oracle-row">
+              <span class="oracle-label">Tx Hash</span>
+              <span class="oracle-value" style="font-size:10px" id="oracle-tx">0x8a3f...c91e</span>
+            </div>
+            <div class="oracle-row">
+              <span class="oracle-label">DON Nodes</span>
+              <span class="oracle-value" id="oracle-nodes">5/5</span>
+            </div>
+            <div class="oracle-row">
+              <span class="oracle-label">Updated</span>
+              <span class="oracle-value" id="oracle-updated">2 min ago</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Feed -->
+        <div class="bento-cell cell-4">
+          <div class="cell-title">Recent Feed</div>
+          <div class="feed-list" id="detail-feed">
+            <!-- Filled by JS -->
+          </div>
+        </div>
+
+        <!-- Contract -->
+        <div class="bento-cell cell-12" style="padding:14px 20px">
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <span class="cell-title" style="margin:0">Contract</span>
+            <span class="contract-address">0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE</span>
+            <span style="font-family:var(--font-mono);font-size:10px;color:var(--white-tertiary)">Sepolia Testnet</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ WORKFLOW PAGE ============ -->
+    <div class="page" id="page-workflow">
+      <div class="page-header">
+        <h1>CRE Pipeline</h1>
+        <p>Chainlink Runtime Environment workflow for sentiment oracle updates</p>
+      </div>
+
+      <!-- Pipeline Visualization -->
+      <div class="bento-grid">
+        <div class="bento-cell cell-12">
+          <div class="cell-title">Pipeline Stages</div>
+          <div class="pipeline">
+            <div class="pipeline-step">
+              <div class="pipeline-step-icon">{}</div>
+              <div class="pipeline-step-label">Fetch API</div>
+              <div class="pipeline-step-sub">X API + classify</div>
+            </div>
+            <div class="pipeline-arrow"><svg viewBox="0 0 24 24"><path d="M5 12h14m-7-7l7 7-7 7"/></svg></div>
+            <div class="pipeline-step">
+              <div class="pipeline-step-icon">fn</div>
+              <div class="pipeline-step-label">AI Score</div>
+              <div class="pipeline-step-sub">Claude sentiment</div>
+            </div>
+            <div class="pipeline-arrow"><svg viewBox="0 0 24 24"><path d="M5 12h14m-7-7l7 7-7 7"/></svg></div>
+            <div class="pipeline-step">
+              <div class="pipeline-step-icon" style="font-size:16px">&#9670;&#9670;&#9670;</div>
+              <div class="pipeline-step-label">DON Consensus</div>
+              <div class="pipeline-step-sub">5-node median</div>
+            </div>
+            <div class="pipeline-arrow"><svg viewBox="0 0 24 24"><path d="M5 12h14m-7-7l7 7-7 7"/></svg></div>
+            <div class="pipeline-step" style="border-color:var(--teal)">
+              <div class="pipeline-step-icon">EVM</div>
+              <div class="pipeline-step-label">Write Chain</div>
+              <div class="pipeline-step-sub">Sepolia oracle</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Workflow YAML -->
+        <div class="bento-cell cell-5">
+          <div class="cell-title">workflow.yaml</div>
+          <div class="code-block"><span class="comment"># SignalBox CRE Workflow</span>
+<span class="keyword">name:</span> <span class="string">sentiment-oracle</span>
+<span class="keyword">owner:</span> <span class="string">0x8e39...3AcE</span>
+
+<span class="keyword">triggers:</span>
+  - <span class="keyword">type:</span> <span class="string">cron</span>
+    <span class="keyword">schedule:</span> <span class="string">"*/5 * * * *"</span>
+
+<span class="keyword">actions:</span>
+  - <span class="keyword">type:</span> <span class="string">custom_compute</span>
+    <span class="keyword">config:</span>
+      <span class="keyword">fetch:</span> <span class="string">x_api_mentions</span>
+      <span class="keyword">classify:</span> <span class="string">claude_haiku</span>
+      <span class="keyword">aggregate:</span> <span class="string">weighted_mean</span>
+
+<span class="keyword">consensus:</span>
+  - <span class="keyword">type:</span> <span class="string">ocr3</span>
+    <span class="keyword">min_nodes:</span> <span class="string">3</span>
+    <span class="keyword">aggregation:</span> <span class="string">median</span>
+
+<span class="keyword">targets:</span>
+  - <span class="keyword">type:</span> <span class="string">write_evm</span>
+    <span class="keyword">address:</span> <span class="string">0x8e39...3AcE</span>
+    <span class="keyword">chain:</span> <span class="string">sepolia</span></div>
+        </div>
+
+        <!-- Run History -->
+        <div class="bento-cell cell-7">
+          <div class="cell-title">Run History</div>
+          <table class="run-table">
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Run ID</th>
+                <th>Duration</th>
+                <th>Score</th>
+                <th>Projects</th>
+                <th>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody id="run-history">
+              <!-- Filled by JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Contract -->
+        <div class="bento-cell cell-12" style="padding:14px 20px">
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <span class="cell-title" style="margin:0">Oracle Contract</span>
+            <span class="contract-address">0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE</span>
+            <span style="font-family:var(--font-mono);font-size:10px;color:var(--white-tertiary)">Sepolia Testnet</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ SETTINGS PAGE ============ -->
+    <div class="page" id="page-settings">
+      <div class="page-header">
+        <h1>Settings</h1>
+        <p>Configure monitored projects, alerts, and oracle parameters</p>
+      </div>
+
+      <div class="bento-grid">
+        <!-- Monitored Projects -->
+        <div class="bento-cell cell-6">
+          <div class="settings-section">
+            <div class="settings-section-title">Monitored Projects</div>
+            <div class="project-tags-list" id="project-tags">
+              <!-- Filled by JS -->
+            </div>
+            <div class="add-project-row">
+              <input type="text" class="input-field" id="add-project-input" placeholder="Add project handle (e.g. @optimism)" style="flex:1">
+              <button class="btn btn-primary" onclick="addProject()">Add</button>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <div class="settings-section-title">Oracle Contract</div>
+            <div class="settings-row">
+              <span class="settings-label">Address</span>
+              <span class="contract-address" style="font-size:11px">0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE</span>
+            </div>
+            <div class="settings-row">
+              <span class="settings-label">Network</span>
+              <span class="settings-value">Sepolia</span>
+            </div>
+            <div class="settings-row">
+              <span class="settings-label">Update Interval</span>
+              <span class="settings-value">5 min</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alerts & API -->
+        <div class="bento-cell cell-6">
+          <div class="settings-section">
+            <div class="settings-section-title">Alert Preferences</div>
+            <div class="settings-row">
+              <span class="settings-label">Bug reports</span>
+              <div class="toggle-wrap">
+                <div class="toggle on" onclick="this.classList.toggle('on')" role="button" tabindex="0" aria-label="Toggle bug alerts"><div class="toggle-knob"></div></div>
+              </div>
+            </div>
+            <div class="settings-row">
+              <span class="settings-label">Complaints</span>
+              <div class="toggle-wrap">
+                <div class="toggle on" onclick="this.classList.toggle('on')" role="button" tabindex="0" aria-label="Toggle complaint alerts"><div class="toggle-knob"></div></div>
+              </div>
+            </div>
+            <div class="settings-row">
+              <span class="settings-label">Feature requests</span>
+              <div class="toggle-wrap">
+                <div class="toggle" onclick="this.classList.toggle('on')" role="button" tabindex="0" aria-label="Toggle feature request alerts"><div class="toggle-knob"></div></div>
+              </div>
+            </div>
+            <div class="settings-row">
+              <span class="settings-label">Score drops > 10%</span>
+              <div class="toggle-wrap">
+                <div class="toggle on" onclick="this.classList.toggle('on')" role="button" tabindex="0" aria-label="Toggle score drop alerts"><div class="toggle-knob"></div></div>
+              </div>
+            </div>
+            <div class="settings-row">
+              <span class="settings-label">High-engagement items</span>
+              <div class="toggle-wrap">
+                <div class="toggle on" onclick="this.classList.toggle('on')" role="button" tabindex="0" aria-label="Toggle engagement alerts"><div class="toggle-knob"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <div class="settings-section-title">API Configuration</div>
+            <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:6px">
+              <span class="settings-label">API Key</span>
+              <input type="password" class="input-field" value="sk-sb-xxxxxxxxxxxxxxxxxxxx" style="width:100%" aria-label="API Key">
+            </div>
+            <div class="settings-row" style="margin-top:8px">
+              <span class="settings-label">Webhook URL</span>
+              <span class="settings-value" style="color:var(--white-tertiary);font-size:11px">Not configured</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+</div>
+
+<!-- Footer -->
+<footer class="app-footer" id="app-footer">
+  <span>Inspired by: Bloomberg (data density) + Vercel (restraint)</span>
+  <span style="font-family:var(--font-mono);font-size:10px">SignalBox v0.1.0 // Sepolia</span>
+</footer>
+
+<script>
+// ========== DATA ==========
+const projects = {
+  chainlink: {
+    score: 82, trend: '+3.2', trendDir: 'up',
+    categories: { praise: 5, feature_request: 1, question: 1, bug: 1, complaint: 1 },
+    feedItems: [
+      {text: "CCIP is a game changer for cross-chain", category: "praise", author: "defi_dev", engagement: 142},
+      {text: "CRE workflows are so clean. Built my first oracle in 2 hours.", category: "praise", author: "web3builder", engagement: 89},
+      {text: "When will CRE support Solana?", category: "feature_request", author: "sol_maxi", engagement: 67},
+      {text: "Price feeds saved my protocol from a flash loan attack", category: "praise", author: "security_chad", engagement: 234},
+      {text: "Docs for workflow.yaml could be clearer", category: "complaint", author: "newdev_123", engagement: 23},
+      {text: "How do I set up a custom data feed?", category: "question", author: "curious_dev", engagement: 15},
+      {text: "Functions v2 is much faster than v1", category: "praise", author: "fn_user", engagement: 56},
+      {text: "CRE simulate error on M1 Mac", category: "bug", author: "mac_dev", engagement: 31},
+    ],
+    summary: "Strong positive sentiment driven by CCIP adoption and CRE developer experience. Minor friction points around documentation clarity and M1 Mac compatibility. Community enthusiasm for cross-chain capabilities is the dominant signal. Recommend prioritizing Solana support based on feature request volume."
+  },
+  uniswap: {
+    score: 65, trend: '-1.8', trendDir: 'down',
+    categories: { praise: 3, feature_request: 2, question: 2, bug: 1, complaint: 2 },
+    feedItems: [
+      {text: "V4 hooks are going to change everything", category: "praise", author: "hook_dev", engagement: 198},
+      {text: "Gas fees still too high on mainnet", category: "complaint", author: "gas_watcher", engagement: 87},
+      {text: "When will V4 launch?", category: "question", author: "uni_fan", engagement: 156},
+      {text: "LP position tracking is broken", category: "bug", author: "lp_whale", engagement: 43},
+    ],
+    summary: "Mixed sentiment. V4 hooks generating excitement but gas concerns and launch timeline uncertainty creating friction. LP tooling reliability is a growing pain point."
+  },
+  aave: {
+    score: 78, trend: '+1.4', trendDir: 'up',
+    categories: { praise: 4, feature_request: 1, question: 1, bug: 0, complaint: 1 },
+    feedItems: [
+      {text: "GHO stability is impressive", category: "praise", author: "stablecoin_fan", engagement: 112},
+      {text: "V3 cross-chain lending is seamless", category: "praise", author: "defi_power", engagement: 76},
+      {text: "Need more GHO use cases", category: "feature_request", author: "gho_holder", engagement: 54},
+    ],
+    summary: "Positive trajectory driven by GHO stability and V3 cross-chain adoption. Community wants expanded GHO utility. No major technical complaints."
+  },
+  base: {
+    score: 71, trend: '+5.1', trendDir: 'up',
+    categories: { praise: 3, feature_request: 3, question: 2, bug: 1, complaint: 0 },
+    feedItems: [
+      {text: "Base is the fastest L2 I've used", category: "praise", author: "l2_explorer", engagement: 203},
+      {text: "Need native USDC bridges", category: "feature_request", author: "bridge_user", engagement: 91},
+      {text: "Onchain summer vibes are real", category: "praise", author: "based_dev", engagement: 167},
+    ],
+    summary: "Strong growth momentum. Speed and UX are praised. Bridging infrastructure and native token support are top feature requests. Community energy is high."
+  },
+  arbitrum: {
+    score: 58, trend: '-4.3', trendDir: 'down',
+    categories: { praise: 2, feature_request: 1, question: 1, bug: 2, complaint: 3 },
+    feedItems: [
+      {text: "Sequencer downtime is unacceptable", category: "complaint", author: "arb_trader", engagement: 312},
+      {text: "Stylus is a great idea but needs docs", category: "feature_request", author: "rust_dev", engagement: 78},
+      {text: "Nitro upgrade broke my contract", category: "bug", author: "arb_builder", engagement: 45},
+    ],
+    summary: "Declining sentiment. Sequencer reliability concerns dominate. Stylus has developer interest but documentation gaps are slowing adoption. Bug reports around Nitro compatibility need addressing."
+  }
+};
+
+const runHistory = [
+  { status: 'success', id: 'run_8f2a1c', duration: '4.2s', score: '70.8', projects: 5, time: '2 min ago' },
+  { status: 'success', id: 'run_7e9b3d', duration: '3.8s', score: '71.1', projects: 5, time: '7 min ago' },
+  { status: 'success', id: 'run_6d8c4e', duration: '4.5s', score: '70.6', projects: 5, time: '12 min ago' },
+  { status: 'failed', id: 'run_5c7d5f', duration: '1.1s', score: '--', projects: 5, time: '17 min ago' },
+  { status: 'success', id: 'run_4b6e6a', duration: '3.9s', score: '71.4', projects: 5, time: '22 min ago' },
+  { status: 'success', id: 'run_3a5f7b', duration: '4.1s', score: '70.9', projects: 5, time: '27 min ago' },
+  { status: 'running', id: 'run_9g3h2i', duration: '...', score: '--', projects: 5, time: 'now' },
+];
+
+let monitoredProjects = ['chainlink', 'uniswap', 'aave', 'base', 'arbitrum'];
+let currentDetailProject = 'chainlink';
+
+// ========== NAVIGATION ==========
+function navigateTo(page, projectKey) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+  const pageId = 'page-' + page;
+  document.getElementById(pageId).classList.add('active');
+
+  const navItems = document.querySelectorAll('.nav-item');
+  const navMap = { dashboard: 0, detail: 1, workflow: 2, settings: 3 };
+  if (navMap[page] !== undefined) navItems[navMap[page]].classList.add('active');
+
+  if (page === 'detail' && projectKey) {
+    currentDetailProject = projectKey;
+    renderDetail(projectKey);
+  } else if (page === 'detail') {
+    renderDetail(currentDetailProject);
+  }
+
+  window.scrollTo(0, 0);
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('collapsed');
+}
+
+// ========== RENDER DASHBOARD ==========
+function renderDashboard() {
+  const grid = document.getElementById('dashboard-grid');
+  grid.innerHTML = '';
+
+  const projectKeys = Object.keys(projects);
+  const cellSizes = ['cell-4', 'cell-4', 'cell-4', 'cell-6', 'cell-6'];
+
+  projectKeys.forEach((key, i) => {
+    const p = projects[key];
+    const scoreClass = p.score >= 75 ? 'score-positive' : p.score >= 60 ? 'score-neutral' : 'score-low';
+
+    const catPills = Object.entries(p.categories)
+      .filter(([, v]) => v > 0)
+      .map(([cat, count]) => `<span class="category-pill ${cat}">${cat.replace('_', ' ')} ${count}</span>`)
+      .join('');
+
+    const totalCats = Object.values(p.categories).reduce((a, b) => a + b, 0);
+    const barSegments = Object.entries(p.categories)
+      .filter(([, v]) => v > 0)
+      .map(([cat, count]) => {
+        const pct = (count / totalCats * 100).toFixed(1);
+        const colorMap = { praise: '#10b981', feature_request: '#0AFFED', question: '#a78bfa', bug: '#ef4444', complaint: '#f59e0b' };
+        return `<div class="project-bar-fill" style="width:${pct}%;background:${colorMap[cat]}"></div>`;
+      }).join('');
+
+    const cell = document.createElement('div');
+    cell.className = `bento-cell ${cellSizes[i]} project-card`;
+    cell.onclick = () => navigateTo('detail', key);
+    cell.setAttribute('role', 'button');
+    cell.setAttribute('tabindex', '0');
+    cell.setAttribute('aria-label', `View ${key} details, score ${p.score}`);
+    cell.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigateTo('detail', key); } };
+
+    cell.innerHTML = `
+      <div class="project-card-header">
+        <span class="project-name">${key}</span>
+        <span class="project-score ${scoreClass} num">${p.score}</span>
+      </div>
+      <span class="trend ${p.trendDir}" style="font-size:11px">${p.trend} (7d)</span>
+      <div class="project-categories">${catPills}</div>
+      <div class="project-bar">${barSegments}</div>
+    `;
+
+    grid.appendChild(cell);
+  });
+
+  // Recent feed cell
+  const feedCell = document.createElement('div');
+  feedCell.className = 'bento-cell cell-12';
+  feedCell.innerHTML = `<div class="cell-title">Latest Feed (All Projects)</div><div class="feed-list" id="global-feed"></div>`;
+  grid.appendChild(feedCell);
+
+  // Populate global feed
+  const allItems = [];
+  Object.entries(projects).forEach(([key, p]) => {
+    p.feedItems.forEach(item => {
+      allItems.push({ ...item, project: key });
+    });
+  });
+  allItems.sort((a, b) => b.engagement - a.engagement);
+
+  const feedEl = feedCell.querySelector('#global-feed');
+  allItems.slice(0, 8).forEach(item => {
+    feedEl.innerHTML += `
+      <div class="feed-item">
+        <div class="feed-dot ${item.category}"></div>
+        <div class="feed-content">
+          <div class="feed-text">${item.text}</div>
+          <div class="feed-meta">
+            <span>@${item.author}</span>
+            <span style="color:var(--black-border)">|</span>
+            <span style="text-transform:capitalize">${item.project}</span>
+            <span style="color:var(--black-border)">|</span>
+            <span class="feed-engagement">${item.engagement} engagements</span>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+}
+
+// ========== RENDER DETAIL ==========
+function renderDetail(key) {
+  const p = projects[key];
+  if (!p) return;
+
+  document.getElementById('detail-project-name').textContent = key.charAt(0).toUpperCase() + key.slice(1);
+
+  const scoreEl = document.getElementById('detail-score');
+  scoreEl.textContent = p.score;
+  scoreEl.className = 'detail-score-inline ' + (p.score >= 75 ? 'score-positive' : p.score >= 60 ? 'score-neutral' : 'score-low');
+
+  const trendEl = document.getElementById('detail-trend');
+  trendEl.textContent = `${p.trend} (7d)`;
+  trendEl.className = 'trend ' + p.trendDir;
+
+  document.getElementById('ai-summary-text').textContent = p.summary;
+  document.getElementById('oracle-score').textContent = p.score;
+
+  // Feed
+  const feedEl = document.getElementById('detail-feed');
+  feedEl.innerHTML = '';
+  p.feedItems.forEach(item => {
+    feedEl.innerHTML += `
+      <div class="feed-item">
+        <div class="feed-dot ${item.category}"></div>
+        <div class="feed-content">
+          <div class="feed-text">${item.text}</div>
+          <div class="feed-meta">
+            <span>@${item.author}</span>
+            <span style="color:var(--black-border)">|</span>
+            <span class="feed-engagement">${item.engagement}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+
+  // Doughnut legend
+  const legendEl = document.getElementById('doughnut-legend');
+  legendEl.innerHTML = '';
+  const catNames = { praise: 'Praise', feature_request: 'Feature Req', question: 'Question', bug: 'Bug', complaint: 'Complaint' };
+  const catColors = { praise: '#10b981', feature_request: '#0AFFED', question: '#a78bfa', bug: '#ef4444', complaint: '#f59e0b' };
+
+  Object.entries(p.categories).forEach(([cat, count]) => {
+    legendEl.innerHTML += `
+      <div class="legend-item">
+        <div class="legend-dot" style="background:${catColors[cat]}"></div>
+        <span>${catNames[cat]}</span>
+        <span class="legend-value">${count}</span>
+      </div>
+    `;
+  });
+
+  // Draw doughnut
+  drawDoughnut(p.categories, catColors);
+
+  // Draw timeline
+  drawTimeline(p.score);
+}
+
+// ========== DRAW DOUGHNUT (Canvas) ==========
+function drawDoughnut(categories, colors) {
+  const canvas = document.getElementById('doughnut-canvas');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = 140 * dpr;
+  canvas.height = 140 * dpr;
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, 140, 140);
+
+  const total = Object.values(categories).reduce((a, b) => a + b, 0);
+  if (total === 0) return;
+
+  const cx = 70, cy = 70, outerR = 60, innerR = 40;
+  let startAngle = -Math.PI / 2;
+
+  Object.entries(categories).forEach(([cat, count]) => {
+    if (count === 0) return;
+    const sliceAngle = (count / total) * Math.PI * 2;
+    const endAngle = startAngle + sliceAngle;
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, outerR, startAngle, endAngle);
+    ctx.arc(cx, cy, innerR, endAngle, startAngle, true);
+    ctx.closePath();
+    ctx.fillStyle = colors[cat];
+    ctx.fill();
+
+    startAngle = endAngle;
+  });
+
+  // Center text
+  ctx.fillStyle = '#fafafa';
+  ctx.font = '600 22px "JetBrains Mono", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(total, cx, cy - 4);
+  ctx.fillStyle = '#52525b';
+  ctx.font = '400 9px "JetBrains Mono", monospace';
+  ctx.fillText('ITEMS', cx, cy + 12);
+}
+
+// ========== DRAW TIMELINE (Canvas) ==========
+function drawTimeline(currentScore) {
+  const canvas = document.getElementById('timeline-canvas');
+  const rect = canvas.parentElement.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = rect.width * dpr;
+  canvas.height = 180 * dpr;
+  canvas.style.width = rect.width + 'px';
+  canvas.style.height = '180px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  const w = rect.width;
+  const h = 180;
+  const padding = { top: 20, right: 20, bottom: 30, left: 40 };
+  const chartW = w - padding.left - padding.right;
+  const chartH = h - padding.top - padding.bottom;
+
+  // Generate 30 data points trending toward current score
+  const points = [];
+  let val = currentScore - 8 + Math.random() * 4;
+  for (let i = 0; i < 30; i++) {
+    val += (currentScore - val) * 0.08 + (Math.random() - 0.5) * 3;
+    val = Math.max(30, Math.min(100, val));
+    points.push(val);
+  }
+  points[29] = currentScore;
+
+  const minV = Math.min(...points) - 5;
+  const maxV = Math.max(...points) + 5;
+
+  ctx.clearRect(0, 0, w, h);
+
+  // Grid lines
+  ctx.strokeStyle = '#1e1e22';
+  ctx.lineWidth = 0.5;
+  for (let i = 0; i <= 4; i++) {
+    const y = padding.top + (chartH / 4) * i;
+    ctx.beginPath();
+    ctx.moveTo(padding.left, y);
+    ctx.lineTo(w - padding.right, y);
+    ctx.stroke();
+
+    const label = Math.round(maxV - (maxV - minV) * (i / 4));
+    ctx.fillStyle = '#52525b';
+    ctx.font = '10px "JetBrains Mono", monospace';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, padding.left - 8, y);
+  }
+
+  // Area fill
+  ctx.beginPath();
+  points.forEach((val, i) => {
+    const x = padding.left + (i / 29) * chartW;
+    const y = padding.top + ((maxV - val) / (maxV - minV)) * chartH;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  ctx.lineTo(padding.left + chartW, padding.top + chartH);
+  ctx.lineTo(padding.left, padding.top + chartH);
+  ctx.closePath();
+
+  const grad = ctx.createLinearGradient(0, padding.top, 0, padding.top + chartH);
+  grad.addColorStop(0, 'rgba(10, 255, 237, 0.12)');
+  grad.addColorStop(1, 'rgba(10, 255, 237, 0)');
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  points.forEach((val, i) => {
+    const x = padding.left + (i / 29) * chartW;
+    const y = padding.top + ((maxV - val) / (maxV - minV)) * chartH;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  ctx.strokeStyle = '#0AFFED';
+  ctx.lineWidth = 1.5;
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+
+  // End dot
+  const lastX = padding.left + chartW;
+  const lastY = padding.top + ((maxV - currentScore) / (maxV - minV)) * chartH;
+  ctx.beginPath();
+  ctx.arc(lastX, lastY, 3, 0, Math.PI * 2);
+  ctx.fillStyle = '#0AFFED';
+  ctx.fill();
+
+  // X-axis labels
+  ctx.fillStyle = '#52525b';
+  ctx.font = '10px "JetBrains Mono", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  ['30d', '20d', '10d', 'now'].forEach((label, i) => {
+    const x = padding.left + (i / 3) * chartW;
+    ctx.fillText(label, x, h - 18);
+  });
+}
+
+// ========== RENDER WORKFLOW ==========
+function renderRunHistory() {
+  const tbody = document.getElementById('run-history');
+  tbody.innerHTML = '';
+
+  runHistory.forEach(run => {
+    const dotClass = run.status === 'success' ? 'success' : run.status === 'failed' ? 'failed' : 'running';
+    const statusLabel = run.status.charAt(0).toUpperCase() + run.status.slice(1);
+    tbody.innerHTML += `
+      <tr>
+        <td><span class="status-dot ${dotClass}"></span>${statusLabel}</td>
+        <td class="mono">${run.id}</td>
+        <td class="mono">${run.duration}</td>
+        <td class="mono">${run.score}</td>
+        <td class="mono">${run.projects}</td>
+        <td class="mono">${run.time}</td>
+      </tr>
+    `;
+  });
+}
+
+// ========== RENDER SETTINGS ==========
+function renderSettings() {
+  const tagsEl = document.getElementById('project-tags');
+  tagsEl.innerHTML = '';
+  monitoredProjects.forEach(p => {
+    tagsEl.innerHTML += `
+      <div class="project-tag">
+        <span>@${p}</span>
+        <span class="project-tag-remove" onclick="removeProject('${p}')" role="button" tabindex="0" aria-label="Remove ${p}">&times;</span>
+      </div>
+    `;
+  });
+}
+
+function addProject() {
+  const input = document.getElementById('add-project-input');
+  const val = input.value.trim().replace('@', '').toLowerCase();
+  if (val && !monitoredProjects.includes(val)) {
+    monitoredProjects.push(val);
+    renderSettings();
+    input.value = '';
+  }
+}
+
+function removeProject(name) {
+  monitoredProjects = monitoredProjects.filter(p => p !== name);
+  renderSettings();
+}
+
+// ========== INIT ==========
+function init() {
+  renderDashboard();
+  renderRunHistory();
+  renderSettings();
+
+  // Add enter key handler for add project input
+  document.getElementById('add-project-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') addProject();
+  });
+
+  // Resize handler for timeline canvas
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      if (document.getElementById('page-detail').classList.contains('active')) {
+        renderDetail(currentDetailProject);
+      }
+    }, 200);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+
+</body>
+</html>
