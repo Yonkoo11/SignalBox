@@ -15,16 +15,16 @@
     --bg-deep:#0C0C0E;--bg:#111114;--surface:#1A1A1F;--surface-2:#222228;--surface-3:#2A2A30;
     --border:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.1);
     --text:#E8E8EC;--text-2:#8A8A96;--text-3:#6B6B76;--text-on-accent:#FAFAFA;
-    --accent:#E0743A;--accent-dim:rgba(224,116,58,0.12);--accent-glow:rgba(224,116,58,0.15);
-    --green:#5CB88A;--green-dim:rgba(92,184,138,0.10);
-    --red:#C96B6B;--red-dim:rgba(201,107,107,0.10);
-    --orange:#C9A24E;--orange-dim:rgba(201,162,78,0.10);
-    --purple:#8A7AB8;--purple-dim:rgba(138,122,184,0.10);
+    --accent:#E0743A;--accent-dim:rgba(224,116,58,0.10);
+    --green:#5A9E8F;--green-dim:rgba(90,158,143,0.10);
+    --red:#9E6B6B;--red-dim:rgba(158,107,107,0.10);
+    --orange:#9E8F6B;--orange-dim:rgba(158,143,107,0.10);
+    --purple:#7B7E9E;--purple-dim:rgba(123,126,158,0.10);
     --ease:cubic-bezier(0.22,1,0.36,1);
     --font-display:'Space Grotesk',sans-serif;
     --font-body:'DM Sans',sans-serif;
     --font-mono:'JetBrains Mono',monospace;
-    --radius:4px;--radius-lg:12px;
+    --radius:4px;
 }
 
 /* ============================================================
@@ -59,7 +59,7 @@ body {
     overflow-x:hidden;
     position:relative;
     line-height:1.5;
-    font-size:14px;
+    font-size:13px;
 }
 
 /* Ambient elements removed — clean flat surfaces */
@@ -129,7 +129,7 @@ input,select { min-height:44px; }
     justify-content:space-between;
     padding:0 24px;
     z-index:100;
-    box-shadow:0 1px 3px rgba(0,0,0,0.12);
+    /* no shadow -- bordered cards per brief */
 }
 
 .status-left {
@@ -250,7 +250,7 @@ input,select { min-height:44px; }
 .section-title {
     font-family:var(--font-display);
     font-weight:600;
-    font-size:18px;
+    font-size:16px;
     color:var(--text);
     letter-spacing:-0.01em;
     line-height:1.2;
@@ -294,12 +294,12 @@ input,select { min-height:44px; }
     margin-top:40px;
     background:var(--surface);
     border:1px solid var(--border);
-    border-radius:var(--radius-lg);
+    border-radius:var(--radius);
     padding:48px;
     text-align:center;
     position:relative;
     overflow:hidden;
-    box-shadow:0 1px 3px rgba(0,0,0,0.12);
+    /* no shadow -- bordered cards per brief */
 }
 
 .hero-label {
@@ -372,7 +372,7 @@ input,select { min-height:44px; }
 .project-card {
     background:var(--surface);
     border:1px solid var(--border);
-    border-radius:var(--radius-lg);
+    border-radius:var(--radius);
     padding:24px;
     cursor:pointer;
     transition:border-color 0.15s var(--ease),background 0.15s var(--ease);
@@ -405,7 +405,7 @@ input,select { min-height:44px; }
 .project-card-score {
     font-family:var(--font-mono);
     font-weight:600;
-    font-size:20px;
+    font-size:16px;
     letter-spacing:-0.02em;
 }
 
@@ -435,7 +435,7 @@ input,select { min-height:44px; }
 
 .project-card-bar-segment {
     height:100%;
-    transition:width 0.6s var(--ease);
+    transition:width 0.3s var(--ease);
 }
 
 .project-card-summary {
@@ -454,7 +454,7 @@ input,select { min-height:44px; }
 /* Category bar colors */
 .bar-praise { background:var(--green); }
 .bar-bug { background:var(--red); }
-.bar-complaint { background:var(--orange); }
+.bar-complaint { background:var(--red); }
 .bar-feature_request { background:var(--purple); }
 .bar-question { background:var(--accent); }
 
@@ -546,7 +546,7 @@ input,select { min-height:44px; }
     gap:16px;
     align-items:flex-start;
     position:relative;
-    transition:border-color 0.2s var(--ease),background 0.2s var(--ease);
+    transition:border-color 0.15s var(--ease),background 0.15s var(--ease);
 }
 
 @media (hover:hover) {
@@ -610,10 +610,10 @@ input,select { min-height:44px; }
 .pipeline-stat-card {
     background:var(--surface);
     border:1px solid var(--border);
-    border-radius:var(--radius-lg);
+    border-radius:var(--radius);
     padding:20px;
     text-align:center;
-    box-shadow:0 1px 3px rgba(0,0,0,0.12);
+    /* no shadow -- bordered cards per brief */
 }
 
 .pipeline-stat-label {
@@ -627,7 +627,7 @@ input,select { min-height:44px; }
 
 .pipeline-stat-value {
     font-family:var(--font-display);
-    font-size:28px;
+    font-size:24px;
     font-weight:700;
     line-height:1.15;
     color:var(--text);
@@ -659,7 +659,7 @@ input,select { min-height:44px; }
     font-size:16px;
     color:var(--text-3);
     background:var(--surface);
-    transition:border-color 0.3s var(--ease),color 0.3s var(--ease);
+    transition:border-color 0.15s var(--ease),color 0.15s var(--ease);
 }
 
 .pipeline-circle.completed { border-color:var(--green); color:var(--green); }
@@ -674,7 +674,7 @@ input,select { min-height:44px; }
     width:48px; height:2px;
     border-top:2px dashed var(--surface-3);
     margin-bottom:36px;
-    transition:border-color 0.3s var(--ease);
+    transition:border-color 0.15s var(--ease);
 }
 
 .pipeline-connector.completed { border-color:var(--green); }
@@ -766,9 +766,9 @@ input,select { min-height:44px; }
 .oracle-card {
     background:var(--surface);
     border:1px solid var(--border);
-    border-radius:var(--radius-lg);
+    border-radius:var(--radius);
     padding:28px;
-    box-shadow:0 1px 3px rgba(0,0,0,0.12);
+    /* no shadow -- bordered cards per brief */
 }
 
 .oracle-grid {
@@ -805,7 +805,7 @@ input,select { min-height:44px; }
     font-size:12px;
     color:var(--accent);
     margin-top:16px;
-    transition:color 0.2s var(--ease);
+    transition:color 0.15s var(--ease);
     min-height:44px;
 }
 
@@ -820,7 +820,7 @@ input,select { min-height:44px; }
     padding:2px 8px;
     border-radius:var(--radius);
     cursor:pointer;
-    transition:color 0.2s var(--ease),border-color 0.2s var(--ease);
+    transition:color 0.15s var(--ease),border-color 0.15s var(--ease);
     min-height:24px; min-width:auto;
 }
 
@@ -838,7 +838,7 @@ input,select { min-height:44px; }
     z-index:150;
     opacity:0;
     pointer-events:none;
-    transition:opacity 0.3s var(--ease);
+    transition:opacity 0.15s var(--ease);
 }
 
 .slide-overlay.open {
@@ -855,7 +855,7 @@ input,select { min-height:44px; }
     border-left:1px solid var(--border-strong);
     overflow-y:auto;
     transform:translateX(100%);
-    transition:transform 0.3s var(--ease);
+    transition:transform 0.15s var(--ease);
     box-shadow:-4px 0 16px rgba(0,0,0,0.2);
 }
 
@@ -940,7 +940,7 @@ input,select { min-height:44px; }
 
 .score-ring-container svg { width:100%; height:100%; transform:rotate(-90deg); }
 .score-ring-bg { fill:none; stroke:var(--surface-2); stroke-width:8; }
-.score-ring-fill { fill:none; stroke-width:8; stroke-linecap:round; transition:stroke-dashoffset 0.6s var(--ease); }
+.score-ring-fill { fill:none; stroke-width:8; stroke-linecap:round; transition:stroke-dashoffset 0.3s var(--ease); }
 
 .score-ring-text {
     position:absolute;
@@ -983,7 +983,7 @@ input,select { min-height:44px; }
     border-radius:var(--radius);
     padding:20px;
     margin-bottom:24px;
-    box-shadow:0 2px 8px rgba(0,0,0,0.08);
+    /* no shadow -- bordered cards per brief */
 }
 
 .slide-ai-label {
@@ -1057,7 +1057,7 @@ input,select { min-height:44px; }
 .slide-bar-fill {
     height:100%;
     border-radius:var(--radius);
-    transition:width 0.4s var(--ease);
+    transition:width 0.3s var(--ease);
 }
 
 .slide-bar-value {
@@ -1114,7 +1114,7 @@ input,select { min-height:44px; }
     font-family:var(--font-mono);
     font-size:12px;
     color:var(--text-3);
-    transition:color 0.2s var(--ease);
+    transition:color 0.15s var(--ease);
     min-height:44px; min-width:auto;
 }
 
@@ -1208,7 +1208,7 @@ input,select { min-height:44px; }
     border-radius:var(--radius);
     padding:6px 14px;
     cursor:pointer;
-    transition:color 0.2s var(--ease),border-color 0.2s var(--ease),background 0.2s var(--ease);
+    transition:color 0.15s var(--ease),border-color 0.15s var(--ease),background 0.15s var(--ease);
     min-height:32px; min-width:auto;
 }
 
@@ -1221,7 +1221,7 @@ input,select { min-height:44px; }
     border:1px solid var(--border);
     border-radius:var(--radius);
     overflow:hidden;
-    box-shadow:0 2px 8px rgba(0,0,0,0.08);
+    /* no shadow -- bordered cards per brief */
 }
 
 /* AI Analysis on project page */
@@ -1230,9 +1230,9 @@ input,select { min-height:44px; }
     background:var(--surface);
     border:1px solid var(--border);
     border-left:3px solid var(--accent);
-    border-radius:var(--radius-lg);
+    border-radius:var(--radius);
     padding:28px;
-    box-shadow:0 1px 3px rgba(0,0,0,0.12);
+    /* no shadow -- bordered cards per brief */
 }
 
 .ai-analysis-label {
@@ -1271,9 +1271,9 @@ input,select { min-height:44px; }
 .deep-dive-card {
     background:var(--surface);
     border:1px solid var(--border);
-    border-radius:var(--radius-lg);
+    border-radius:var(--radius);
     padding:24px;
-    box-shadow:0 1px 3px rgba(0,0,0,0.12);
+    /* no shadow -- bordered cards per brief */
 }
 
 .deep-dive-card h3 {
@@ -1288,7 +1288,7 @@ input,select { min-height:44px; }
 .cat-bar-row { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
 .cat-bar-label { font-family:var(--font-mono); font-size:11px; color:var(--text-2); width:110px; flex-shrink:0; text-transform:capitalize; }
 .cat-bar-track { flex:1; height:8px; background:var(--surface-3); border-radius:var(--radius); overflow:hidden; }
-.cat-bar-fill { height:100%; border-radius:var(--radius); transition:width 0.6s var(--ease); }
+.cat-bar-fill { height:100%; border-radius:var(--radius); transition:width 0.3s var(--ease); }
 .cat-bar-count { font-family:var(--font-mono); font-size:11px; color:var(--text-3); width:30px; text-align:right; flex-shrink:0; }
 
 .theme-list { list-style:none; }
@@ -1308,7 +1308,7 @@ input,select { min-height:44px; }
     display:flex;
     align-items:center;
     gap:16px;
-    transition:border-color 0.2s var(--ease),background 0.2s var(--ease),box-shadow 0.2s var(--ease);
+    transition:border-color 0.15s var(--ease),background 0.15s var(--ease),box-shadow 0.15s var(--ease);
 }
 
 @media (hover:hover) {
@@ -1336,7 +1336,7 @@ input,select { min-height:44px; }
     border-radius:var(--radius);
     padding:6px 12px;
     cursor:pointer;
-    transition:color 0.2s var(--ease),border-color 0.2s var(--ease),background 0.2s var(--ease);
+    transition:color 0.15s var(--ease),border-color 0.15s var(--ease),background 0.15s var(--ease);
     display:flex;
     align-items:center;
     gap:6px;
@@ -1354,10 +1354,10 @@ input,select { min-height:44px; }
 .settings-section {
     background:var(--surface);
     border:1px solid var(--border);
-    border-radius:var(--radius-lg);
+    border-radius:var(--radius);
     padding:24px;
     margin-bottom:20px;
-    box-shadow:0 1px 3px rgba(0,0,0,0.12);
+    /* no shadow -- bordered cards per brief */
 }
 
 .settings-section h3 { font-family:var(--font-display); font-weight:600; font-size:15px; color:var(--text); line-height:1.2; margin-bottom:16px; }
@@ -1383,7 +1383,7 @@ input,select { min-height:44px; }
     border-radius:var(--radius);
     padding:8px 12px;
     width:300px;
-    transition:border-color 0.2s var(--ease);
+    transition:border-color 0.15s var(--ease);
 }
 
 .settings-input:focus { border-color:var(--accent); }
@@ -1395,7 +1395,7 @@ input,select { min-height:44px; }
     background:var(--surface-3);
     border-radius:12px;
     cursor:pointer;
-    transition:background 0.2s var(--ease);
+    transition:background 0.15s var(--ease);
     flex-shrink:0;
     min-height:24px;
 }
@@ -1409,7 +1409,7 @@ input,select { min-height:44px; }
     width:18px; height:18px;
     background:var(--text-on-accent);
     border-radius:50%;
-    transition:transform 0.2s var(--ease);
+    transition:transform 0.15s var(--ease);
 }
 
 .toggle.active::after { transform:translateX(20px); }
@@ -1438,7 +1438,7 @@ input,select { min-height:44px; }
     max-height:420px;
     background:var(--surface);
     border:1px solid var(--border-strong);
-    border-radius:var(--radius-lg);
+    border-radius:var(--radius);
     overflow:hidden;
     box-shadow:0 8px 24px rgba(0,0,0,0.3);
 }
@@ -1712,7 +1712,7 @@ function staggerAnimate(selector, delay, animName) {
             return;
         }
         el.style.opacity = '0';
-        el.style.animation = `${animName} 0.4s var(--ease) ${i * delay}ms forwards`;
+        el.style.animation = `${animName} 0.3s var(--ease) ${i * delay}ms forwards`;
     });
 }
 
@@ -1960,7 +1960,7 @@ function renderComparison() {
     const c = STATE.comparison;
     if (!c) {
         el.innerHTML = `<div class="zone-header"><span class="section-title">Project Comparison</span></div>
-            <div class="project-grid">${Array(5).fill('<div class="skeleton-block" style="height:180px;border-radius:var(--radius-lg)"></div>').join('')}</div>`;
+            <div class="project-grid">${Array(5).fill('<div class="skeleton-block" style="height:180px;border-radius:var(--radius)"></div>').join('')}</div>`;
         return;
     }
 
@@ -2065,7 +2065,7 @@ function renderFeed() {
     const sortOpts = sorts.map(s => `<option value="${s}" ${feedSortBy === s ? 'selected' : ''}>${capitalize(s)}</option>`).join('');
 
     const feedItems = allItems.slice(0, 40).map(item => {
-        const barColor = item.category === 'praise' ? 'var(--green)' : item.category === 'bug' ? 'var(--red)' : item.category === 'complaint' ? 'var(--orange)' : item.category === 'feature_request' ? 'var(--purple)' : 'var(--accent)';
+        const barColor = item.category === 'praise' ? 'var(--green)' : item.category === 'bug' ? 'var(--red)' : item.category === 'complaint' ? 'var(--red)' : item.category === 'feature_request' ? 'var(--purple)' : 'var(--accent)';
         const catClass = 'cat-' + (item.category || 'praise');
         const priKey = (item.priority || 'low').toLowerCase();
         return `<div class="feed-item feed-stagger">
@@ -2301,7 +2301,7 @@ async function openSlideOver(project) {
     ).join('');
 
     const topSignals = (data.items || []).slice(0, 5).map(item => {
-        const catColor = item.category === 'praise' ? 'var(--green)' : item.category === 'bug' ? 'var(--red)' : item.category === 'complaint' ? 'var(--orange)' : item.category === 'feature_request' ? 'var(--purple)' : 'var(--accent)';
+        const catColor = item.category === 'praise' ? 'var(--green)' : item.category === 'bug' ? 'var(--red)' : item.category === 'complaint' ? 'var(--red)' : item.category === 'feature_request' ? 'var(--purple)' : 'var(--accent)';
         const catBg = item.category === 'praise' ? 'var(--green-dim)' : item.category === 'bug' ? 'var(--red-dim)' : item.category === 'complaint' ? 'var(--red-dim)' : item.category === 'feature_request' ? 'var(--purple-dim)' : 'var(--orange-dim)';
         return `<div class="slide-feed-item">
             <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
@@ -2625,7 +2625,7 @@ function renderSignalFeed(name, detail) {
     }).join('');
 
     const feedItems = items.map(item => {
-        const barColor = item.category === 'praise' ? 'var(--green)' : item.category === 'bug' ? 'var(--red)' : item.category === 'complaint' ? 'var(--orange)' : item.category === 'feature_request' ? 'var(--purple)' : 'var(--accent)';
+        const barColor = item.category === 'praise' ? 'var(--green)' : item.category === 'bug' ? 'var(--red)' : item.category === 'complaint' ? 'var(--red)' : item.category === 'feature_request' ? 'var(--purple)' : 'var(--accent)';
         const catClass = 'cat-' + (item.category || 'praise');
         const priKey = (item.priority || 'low').toLowerCase();
         return `<div class="feed-item sig-stagger">
