@@ -43,7 +43,7 @@ Twitter/X mentions
 - **Base Sepolia Contract**: [`0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE`](https://sepolia.basescan.org/address/0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE)
 - **E2E Transaction**: [`0x059d6b48...`](https://sepolia.etherscan.io/tx/0x059d6b487d511ab95f5d49806507b9b987219df99af6fe292924b2d9b50cd175)
 - **On-chain Score**: 82/100 for Chainlink on both chains (verified via `cast call`)
-- **Dashboard**: Run locally at `http://localhost:8000/dashboard`
+- **Dashboard**: Run locally at `http://localhost:8000/proposals/proposal-hybrid.html`
 
 ## What Makes This Different
 
@@ -143,7 +143,7 @@ forge test  # 8 tests, all passing
 pip install fastapi uvicorn
 python test_server.py
 # API: http://localhost:8000
-# Dashboard: http://localhost:8000/dashboard
+# Dashboard: http://localhost:8000/proposals/proposal-hybrid.html
 ```
 
 The staging server serves curated demo data with realistic timestamps, category breakdowns, and AI summaries for 5 monitored projects. All responses include `"mode": "staging"` to indicate demo data.
