@@ -1,3 +1,4 @@
+import os
 import logging
 from pathlib import Path
 from contextlib import asynccontextmanager
@@ -7,32 +8,39 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from starlette.middleware.sessions import SessionMiddleware
 
-from app.config import config
-from app.database import init_db
-from app.routers import auth, feedback, settings, billing, sentiment
-from app.tasks.scheduler import start_scheduler, stop_scheduler
-from app.services.telegram_bot import start_bot, stop_bot
-
-# Static files path
+DEMO_MODE = os.getenv("DEMO_MODE", "").lower() in ("true", "1")
 STATIC_DIR = Path(__file__).parent / "static"
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
+    if DEMO_MODE:
+        logger.info("Running in DEMO MODE - no external services")
+        yield
+        return
+
+    # Production mode: initialize all services
+    from app.database import init_db
+    from app.tasks.scheduler import start_scheduler, stop_scheduler
+    from app.services.telegram_bot import start_bot, stop_bot
+    from app.config import config
+
     await init_db()
-    start_scheduler()
+    if config.X_BOT_BEARER_TOKEN:
+        start_scheduler()
+    else:
+        logger.info("Scheduler disabled: X API not configured")
     await start_bot()
     yield
-    # Shutdown
     await stop_bot()
-    stop_scheduler()
+    if config.X_BOT_BEARER_TOKEN:
+        stop_scheduler()
 
 
 app = FastAPI(
@@ -42,8 +50,8 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Middleware
-app.add_middleware(SessionMiddleware, secret_key=config.SECRET_KEY)
+secret_key = os.getenv("SECRET_KEY", "dev-secret-key-change-in-prod")
+app.add_middleware(SessionMiddleware, secret_key=secret_key)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -52,29 +60,32 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Routers
-app.include_router(auth.router)
-app.include_router(feedback.router)
-app.include_router(settings.router)
-app.include_router(billing.router)
-app.include_router(sentiment.router)
+if DEMO_MODE:
+    from app.routers.demo import router as demo_router
+    app.include_router(demo_router)
+    logger.info("Demo router mounted")
+else:
+    from app.config import config
+    from app.routers import auth, feedback, settings, billing, sentiment
+    app.include_router(auth.router)
+    app.include_router(feedback.router)
+    app.include_router(settings.router)
+    app.include_router(billing.router)
+    app.include_router(sentiment.router)
 
-# Static files
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
 @app.get("/")
 async def root():
-    """Serve landing page."""
     return FileResponse(STATIC_DIR / "index.html")
 
 
 @app.get("/dashboard")
 async def dashboard():
-    """Serve sentiment oracle dashboard."""
     return FileResponse(STATIC_DIR / "dashboard.html")
 
 
 @app.get("/health")
 async def health():
-    return {"status": "healthy"}
+    return {"status": "healthy", "mode": "demo" if DEMO_MODE else "production"}
