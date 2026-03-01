@@ -42,7 +42,7 @@ Twitter/X mentions
        |
        v
   Any protocol can read:
-  getSentiment("chainlink") => {score: 82, mentions: 8, ...}
+  getSentiment("chainlink") => {score: 78, mentions: 8, ...}
 ```
 
 ## Live Demo
@@ -51,8 +51,16 @@ Twitter/X mentions
 - **Demo Video**: _Coming soon_
 - **Sepolia Contract**: [`0xcA374e8bba8bd2BA0Aed26c4d425aA9aa7E058D0`](https://sepolia.etherscan.io/address/0xcA374e8bba8bd2BA0Aed26c4d425aA9aa7E058D0)
 - **Base Sepolia Contract**: [`0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE`](https://sepolia.basescan.org/address/0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE)
-- **E2E Transaction**: [`0x059d6b48...`](https://sepolia.etherscan.io/tx/0x059d6b487d511ab95f5d49806507b9b987219df99af6fe292924b2d9b50cd175)
-- **On-chain Score**: 82/100 for Chainlink on both chains (verified via `cast call`)
+- **E2E Transactions** (March 1, 2026 -- live CRE pipeline against Render API):
+
+  | Project | Score | Sepolia TX Hash |
+  |---------|-------|-----------------|
+  | Chainlink | 78 | `0xeafb878a...1c7c9a1b` |
+  | Uniswap | 68 | `0xac29cb9c...f162d402` |
+  | Aave | 78 | `0x1e616081...fbd8fb99` |
+  | Base | 72 | `0xac00081c...62da05b1` |
+  | Arbitrum | 62 | `0x778e9d19...b58eb956` |
+- **On-chain Scores** (verified via `cast call`): Chainlink 78, Aave 78, Base 72, Uniswap 68, Arbitrum 62
 
 ## What Makes This Different
 
@@ -275,18 +283,21 @@ Full multi-step pipeline executed successfully:
 [Step 2] Classifying feedback with Claude AI...
 [Step 2] Classification: {"praise":4,"feature_request":1,"complaint":1,"question":1,"bug":1}
 [Step 3] Aggregating sentiment + risk assessment...
-[Step 3] Score: 82/100 | +5 -1 ~1 | risk=false
+[Step 3] Score: 78/100 | +4 -2 ~1 | risk=false
 [Step 3] Top issues: CRE simulate error on M1 Mac; Documentation clarity needed; Solana support request
-[Step 5] chainlink: score=82 risk=false tx=0x059d6b48...
+[Step 5] chainlink: score=78 risk=false chains=1/2
 === Sentiment Oracle v2 Update Complete ===
 ```
 
-On-chain data verified:
-- Score: 82
-- Total Mentions: 8
-- Positive: 5, Negative: 1, Neutral: 1
-- Summary: "Chainlink community sentiment is strongly positive..."
-- Risk Flag: false (no alert emitted)
+On-chain data verified (March 1, 2026):
+
+| Project | Score | Mentions | Positive | Negative | Neutral |
+|---------|-------|----------|----------|----------|---------|
+| Chainlink | 78 | 8 | 4 | 2 | 1 |
+| Aave | 78 | 6 | 4 | 1 | 0 |
+| Base | 72 | 6 | 4 | 2 | 0 |
+| Uniswap | 68 | 6 | 2 | 2 | 1 |
+| Arbitrum | 62 | 6 | 3 | 2 | 1 |
 
 ## Data Source Strategy
 

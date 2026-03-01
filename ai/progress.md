@@ -1,47 +1,28 @@
 # SignalBox Progress
 
-## Current State: Demo mode working. Ready for Render deployment.
+## Current State: Render live, CRE txs done, Tenderly pending user setup.
 
-## Session: Feb 28, 2026 - Hackathon Submission Prep
+## Session: Mar 1, 2026 - CRE Transactions + README
 
 ### COMPLETED
 1. **Demo mode** - FastAPI app starts cleanly with `DEMO_MODE=true`
-   - Created `src/app/routers/demo.py` - all demo endpoints ported from test_server.py
-   - Modified `src/app/main.py` - conditional imports, skips scheduler/telegram/DB in demo mode
-   - Copied `proposals/proposal-hybrid.html` to `src/app/static/dashboard.html`
-   - Simplified `render.yaml` to single service with DEMO_MODE
-   - Verified: health, comparison, sentiment, pipeline endpoints all working
-   - Dashboard loads and renders correctly with live API data
+2. **Render deployment** - Live at https://signalbox-4bmb.onrender.com (free tier + UptimeRobot)
+3. **Fresh CRE on-chain transactions** (March 1, 2026):
+   - chainlink: score=78, tx=0xeafb878a...1c7c9a1b
+   - uniswap: score=68, tx=0xac29cb9c...f162d402
+   - aave: score=78, tx=0x1e616081...fbd8fb99
+   - base: score=72, tx=0xac00081c...62da05b1
+   - arbitrum: score=62, tx=0x778e9d19...b58eb956
+4. **Production CRE config** - workflow/config.production.json pointing at Render
+5. **README updated** with fresh tx hashes, on-chain scores table
 
 ### IN PROGRESS
-- Render deployment (next step)
-
-### PLAN (8 days to Mar 8 deadline)
-- Day 1 (Feb 28): Demo mode setup [DONE]
-- Day 2 (Mar 1): Deploy to Render
-- Day 3 (Mar 2): Fresh CRE transactions + Tenderly deployment
-- Day 4 (Mar 3): Update README
-- Day 5 (Mar 4): Record demo video
-- Day 6 (Mar 5): Edit + upload video
-- Day 7 (Mar 6-7): Pre-submission testing
-- Day 8 (Mar 8): Submit
-
-### TARGET TRACKS
-- CRE & AI ($33.5K)
-- Risk & Compliance ($32K)
-- Tenderly ($10.25K)
-- Total addressable: $75.75K
-
-### KEY FILES MODIFIED
-1. `src/app/main.py` - Demo mode conditional routing
-2. `src/app/routers/demo.py` - NEW - demo data endpoints
-3. `src/app/static/dashboard.html` - Replaced with polished proposal-hybrid.html
-4. `render.yaml` - Simplified for demo deployment
+- Tenderly Virtual TestNet deployment (needs user to create account + VirtualTestNet)
+- README final updates (Tenderly link + demo video link)
 
 ### WHAT'S LEFT
-- [ ] Deploy to Render
-- [ ] Fresh CRE on-chain transactions (during hackathon period)
-- [ ] Tenderly Virtual TestNet deployment
-- [ ] Update README with all links
+- [ ] Tenderly Virtual TestNet deployment (user creates account, shares RPC URL)
+- [ ] Update README with Tenderly link
 - [ ] Record demo video (<5 min)
-- [ ] Submit to hackathon
+- [ ] Pre-submission testing
+- [ ] Submit to hackathon (Mar 8 deadline)
