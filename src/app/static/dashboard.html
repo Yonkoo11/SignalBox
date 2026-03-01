@@ -215,12 +215,58 @@ input,select { min-height:44px; }
 }
 
 /* ============================================================
+   NAV TABS
+   ============================================================ */
+.nav-tabs {
+    position:fixed;
+    top:48px; left:0; right:0;
+    height:40px;
+    background:var(--bg-deep);
+    border-bottom:1px solid var(--border);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:0;
+    z-index:99;
+}
+
+.nav-tab {
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    color:var(--text-3);
+    background:none;
+    border:none;
+    padding:10px 20px;
+    cursor:pointer;
+    position:relative;
+    transition:color 0.15s var(--ease);
+    min-height:auto; min-width:auto;
+}
+
+.nav-tab:hover { color:var(--text-2); }
+
+.nav-tab.active {
+    color:var(--text);
+}
+
+.nav-tab.active::after {
+    content:'';
+    position:absolute;
+    bottom:0; left:20px; right:20px;
+    height:2px;
+    background:var(--accent);
+    border-radius:1px;
+}
+
+/* ============================================================
    APP CONTAINER
    ============================================================ */
 #app {
     position:relative;
     z-index:1;
-    padding-top:48px;
+    padding-top:88px;
     transition:opacity 0.15s ease-out;
     min-height:100vh;
 }
@@ -1600,7 +1646,7 @@ input,select { min-height:44px; }
     .ticker-line { gap:16px; flex-wrap:wrap; }
     .ticker-item { min-width:50px; }
     .project-title { font-size:28px; }
-    .status-center { display:none; }
+    .nav-tab { padding:10px 12px; font-size:10px; }
     .pipeline-stats { grid-template-columns:1fr; }
     .oracle-grid { grid-template-columns:1fr; }
     .slide-deep-dive { grid-template-columns:1fr; }
@@ -1626,6 +1672,13 @@ input,select { min-height:44px; }
         <span class="sync-text" id="syncText">--</span>
     </div>
 </header>
+
+<nav class="nav-tabs" id="navTabs">
+    <button class="nav-tab active" data-route="#/" onclick="navigateTo('#/')">Overview</button>
+    <button class="nav-tab" data-route="#/signals" onclick="navigateTo('#/signals')">Signals</button>
+    <button class="nav-tab" data-route="#/pipeline" onclick="navigateTo('#/pipeline')">Pipeline</button>
+    <button class="nav-tab" data-route="#/oracle" onclick="navigateTo('#/oracle')">Oracle</button>
+</nav>
 
 <!-- SLIDE-OVER PANEL -->
 <div class="slide-overlay" id="slideOverlay" role="dialog" aria-modal="true" aria-label="Project quick view">
@@ -1893,12 +1946,27 @@ function handleRoute() {
     // Close slide-over on route change
     closeSlideOver();
 
+    // Update active tab
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+        const route = tab.dataset.route;
+        tab.classList.toggle('active', route === '#' + hash || (hash === '/' && route === '#/'));
+    });
+
+    // Show/hide nav tabs (hide on project detail and settings)
+    const navTabs = document.getElementById('navTabs');
+    const isMainPage = ['/', '', '/signals', '/pipeline', '/oracle'].includes(hash);
+    navTabs.style.display = isMainPage ? 'flex' : 'none';
+    app.style.paddingTop = isMainPage ? '88px' : '48px';
+
     app.style.opacity = '0';
     setTimeout(() => {
-        if (hash === '/' || hash === '') renderHomePage();
+        if (hash === '/' || hash === '') renderOverviewPage();
+        else if (hash === '/signals') renderSignalsPage();
+        else if (hash === '/pipeline') renderPipelinePage();
+        else if (hash === '/oracle') renderOraclePage();
         else if (hash.startsWith('/project/')) renderProjectPage(hash.split('/project/')[1]);
         else if (hash === '/settings') renderSettingsPage();
-        else renderHomePage();
+        else renderOverviewPage();
         app.style.opacity = '1';
         window.scrollTo(0, 0);
     }, 150);
@@ -1907,35 +1975,76 @@ function handleRoute() {
 window.addEventListener('hashchange', handleRoute);
 
 /* ============================================================
-   HOME PAGE
+   PAGE FOOTER (shared)
    ============================================================ */
-function renderHomePage() {
+function pageFooterHTML() {
+    return `<footer class="page-footer">
+        <div class="footer-inner">
+            <span class="footer-brand">SignalBox</span>
+            <span class="footer-sep">&middot;</span>
+            <span class="footer-text">On-Chain Sentiment Oracle</span>
+            <span class="footer-sep">&middot;</span>
+            <span class="footer-text">Powered by Chainlink CRE</span>
+        </div>
+    </footer>`;
+}
+
+/* ============================================================
+   OVERVIEW PAGE (Hero + Projects)
+   ============================================================ */
+function renderOverviewPage() {
     const app = document.getElementById('app');
-    app.innerHTML = `<div class="page-container" id="homePage">
+    app.innerHTML = `<div class="page-container">
         <div id="heroZone"></div>
         <div class="zone" id="comparisonZone"></div>
-        <div class="zone" id="themesZone"></div>
-        <div class="zone" id="feedZone"></div>
-        <div class="zone" id="pipelineZone"></div>
-        <div class="zone" id="oracleZone"></div>
-        <footer class="page-footer">
-            <div class="footer-inner">
-                <span class="footer-brand">SignalBox</span>
-                <span class="footer-sep">&middot;</span>
-                <span class="footer-text">On-Chain Sentiment Oracle</span>
-                <span class="footer-sep">&middot;</span>
-                <span class="footer-text">Powered by Chainlink CRE</span>
-            </div>
-        </footer>
+        ${pageFooterHTML()}
     </div>`;
-
     renderHero();
     renderComparison();
+}
+
+/* ============================================================
+   SIGNALS PAGE (Themes + Feed)
+   ============================================================ */
+function renderSignalsPage() {
+    const app = document.getElementById('app');
+    app.innerHTML = `<div class="page-container">
+        <div id="themesZone" style="margin-top:16px"></div>
+        <div class="zone" id="feedZone"></div>
+        ${pageFooterHTML()}
+    </div>`;
     renderThemes();
     renderFeed();
+}
+
+/* ============================================================
+   PIPELINE PAGE
+   ============================================================ */
+function renderPipelinePage() {
+    const app = document.getElementById('app');
+    app.innerHTML = `<div class="page-container">
+        <div id="pipelineZone" style="margin-top:16px"></div>
+        ${pageFooterHTML()}
+    </div>`;
     renderPipeline();
+}
+
+/* ============================================================
+   ORACLE PAGE
+   ============================================================ */
+function renderOraclePage() {
+    const app = document.getElementById('app');
+    app.innerHTML = `<div class="page-container">
+        <div id="oracleZone" style="margin-top:16px"></div>
+        ${pageFooterHTML()}
+    </div>`;
     renderOracle();
 }
+
+/* ============================================================
+   HOME PAGE (legacy - redirects to overview)
+   ============================================================ */
+function renderHomePage() { renderOverviewPage(); }
 
 /* ── Zone 1: Editorial Masthead Hero ── */
 function renderHero() {
@@ -2830,7 +2939,10 @@ let cmdFilteredItems = [];
 function buildCommandItems() {
     CMD_ITEMS.length = 0;
     // Navigation
-    CMD_ITEMS.push({ group: 'Navigation', label: 'Home', action: () => { navigateTo('#/'); closeCommandPalette(); } });
+    CMD_ITEMS.push({ group: 'Navigation', label: 'Overview', action: () => { navigateTo('#/'); closeCommandPalette(); } });
+    CMD_ITEMS.push({ group: 'Navigation', label: 'Signals', action: () => { navigateTo('#/signals'); closeCommandPalette(); } });
+    CMD_ITEMS.push({ group: 'Navigation', label: 'Pipeline', action: () => { navigateTo('#/pipeline'); closeCommandPalette(); } });
+    CMD_ITEMS.push({ group: 'Navigation', label: 'Oracle', action: () => { navigateTo('#/oracle'); closeCommandPalette(); } });
     CMD_ITEMS.push({ group: 'Navigation', label: 'Settings', action: () => { navigateTo('#/settings'); closeCommandPalette(); } });
 
     // Home zone scrolling
