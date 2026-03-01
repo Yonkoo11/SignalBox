@@ -173,20 +173,6 @@ input,select { min-height:44px; }
     border-radius:var(--radius);
 }
 
-.status-center {
-    display:flex;
-    align-items:center;
-    gap:10px;
-}
-
-.global-score-mini {
-    font-family:var(--font-display);
-    font-size:18px;
-    font-weight:700;
-}
-
-.mini-sparkline { height:16px; width:60px; }
-
 .status-right {
     display:flex;
     align-items:center;
@@ -266,13 +252,13 @@ input,select { min-height:44px; }
     color:var(--text-3);
 }
 
-.zone { margin-top:24px; position:relative; }
+.zone { margin-top:40px; position:relative; }
 
 .zone-header {
     display:flex;
     align-items:center;
     justify-content:space-between;
-    margin-bottom:14px;
+    margin-bottom:16px;
 }
 
 .score-green { color:var(--green); }
@@ -293,38 +279,38 @@ input,select { min-height:44px; }
    ZONE 1: EDITORIAL MASTHEAD HERO
    ============================================================ */
 .hero-card {
-    margin-top:12px;
+    margin-top:24px;
     text-align:center;
     position:relative;
     overflow:hidden;
-    padding:16px 48px 0;
+    padding:32px 48px 0;
 }
 
 .hero-masthead {
     font-family:var(--font-editorial);
-    font-size:clamp(20px,3vw,34px);
+    font-size:clamp(22px,3vw,36px);
     font-weight:600;
     color:#f5f5f0;
-    letter-spacing:0.1em;
+    letter-spacing:0.12em;
     line-height:1.1;
     text-transform:uppercase;
-    margin-bottom:2px;
+    margin-bottom:6px;
 }
 
 .hero-tagline {
     font-family:var(--font-editorial);
-    font-size:13px;
+    font-size:14px;
     font-weight:400;
     font-style:normal;
     color:var(--text-3);
-    letter-spacing:0.06em;
-    margin-bottom:12px;
+    letter-spacing:0.04em;
+    margin-bottom:24px;
 }
 
 .hero-rule {
     border:none;
-    border-top:2px double rgba(255,255,255,0.08);
-    margin:0 auto 12px;
+    border-top:1px solid rgba(255,255,255,0.06);
+    margin:0 auto 24px;
     max-width:700px;
 }
 
@@ -333,13 +319,13 @@ input,select { min-height:44px; }
     align-items:baseline;
     justify-content:center;
     gap:16px;
-    margin-bottom:2px;
+    margin-bottom:6px;
 }
 
 .hero-score {
     font-family:var(--font-mono);
     font-weight:600;
-    font-size:clamp(40px,5vw,56px);
+    font-size:clamp(44px,5vw,64px);
     line-height:1;
     color:var(--accent);
     font-variant-numeric:tabular-nums;
@@ -350,15 +336,16 @@ input,select { min-height:44px; }
     font-size:12px;
     font-style:normal;
     color:var(--text-3);
+    letter-spacing:0.04em;
 }
 
 .hero-subtitle {
     font-size:12px;
     color:var(--text-3);
-    margin-bottom:8px;
+    margin-bottom:20px;
 }
 
-.hero-chart { max-width:500px; margin:0 auto 4px; height:48px; }
+.hero-chart { max-width:520px; margin:0 auto 12px; height:52px; }
 .hero-chart svg { width:100%; height:100%; }
 
 .ticker-line {
@@ -380,21 +367,21 @@ input,select { min-height:44px; }
     grid-template-columns:repeat(4,1fr);
     gap:1px;
     background:transparent;
-    margin-top:12px;
+    margin-top:20px;
     border-radius:var(--radius);
     overflow:hidden;
 }
 
 .hero-stat {
     background:var(--surface);
-    padding:10px 16px;
+    padding:16px 20px;
     text-align:center;
 }
 
 .hero-stat-value {
     font-family:var(--font-display);
     font-weight:700;
-    font-size:20px;
+    font-size:22px;
     line-height:1.15;
     letter-spacing:-0.02em;
     color:var(--text);
@@ -402,11 +389,11 @@ input,select { min-height:44px; }
 
 .hero-stat-label {
     font-family:var(--font-mono);
-    font-size:9px;
+    font-size:10px;
     letter-spacing:0.06em;
     text-transform:uppercase;
     color:var(--text-3);
-    margin-top:2px;
+    margin-top:4px;
 }
 
 /* ============================================================
@@ -1633,12 +1620,6 @@ input,select { min-height:44px; }
         <span class="live-dot"></span>
         <span class="network-badge">Sepolia</span>
     </div>
-    <div class="status-center">
-        <span class="global-score-mini" id="statusScore">--</span>
-        <svg class="mini-sparkline" id="statusSparkline" viewBox="0 0 60 16" fill="none">
-            <polyline stroke="var(--accent)" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" id="statusSparklineLine"/>
-        </svg>
-    </div>
     <div class="status-right">
         <span class="demo-badge">TESTNET</span>
         <button class="kbd-hint" style="display:none" onclick="openCommandPalette()" aria-label="Open command palette">Cmd+K</button>
@@ -1896,23 +1877,6 @@ function updateStatusBar() {
     const c = STATE.comparison;
     if (!c) return;
 
-    const scoreEl = document.getElementById('statusScore');
-    scoreEl.textContent = c.avg_score;
-    scoreEl.style.color = scoreColor(c.avg_score);
-
-    // Build avg trend sparkline
-    const allTrends = c.rankings.map(r => r.trend || []);
-    const len = allTrends[0] ? allTrends[0].length : 0;
-    const avgTrend = [];
-    for (let i = 0; i < len; i++) {
-        let sum = 0;
-        allTrends.forEach(t => sum += (t[i] || 0));
-        avgTrend.push(sum / allTrends.length);
-    }
-    const pts = buildMiniSparkline(avgTrend, 60, 16);
-    const sparkEl = document.getElementById('statusSparklineLine');
-    if (sparkEl && pts) sparkEl.setAttribute('points', pts);
-
     // Timer
     if (STATE.pipelineStatus) {
         startTimer(STATE.pipelineStatus.next_run_in || 300);
@@ -1995,8 +1959,8 @@ function renderHero() {
     }).join('');
 
     el.innerHTML = `<div class="hero-card">
-        <div class="hero-masthead">The SignalBox Oracle</div>
-        <div class="hero-tagline">On-Chain Social Sentiment Intelligence</div>
+        <div class="hero-masthead">SignalBox</div>
+        <div class="hero-tagline">The On-Chain Social Oracle</div>
         <div class="hero-rule"></div>
         <div class="hero-score-row">
             <div>
