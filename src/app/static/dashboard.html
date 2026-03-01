@@ -6,14 +6,14 @@
 <title>SignalBox - On-Chain Sentiment Oracle</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400&family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 /* ============================================================
    DESIGN TOKENS
    ============================================================ */
 :root {
     --bg-deep:#0C0C0E;--bg:#111114;--surface:#1A1A1F;--surface-2:#222228;--surface-3:#2A2A30;
-    --border:rgba(255,255,255,0.06);--border-strong:rgba(255,255,255,0.1);
+    --border:rgba(255,255,255,0.08);--border-strong:rgba(255,255,255,0.12);
     --text:#E8E8EC;--text-2:#8A8A96;--text-3:#6B6B76;--text-on-accent:#FAFAFA;
     --accent:#E0743A;--accent-dim:rgba(224,116,58,0.10);
     --green:#5A9E8F;--green-dim:rgba(90,158,143,0.10);
@@ -21,8 +21,8 @@
     --orange:#9E8F6B;--orange-dim:rgba(158,143,107,0.10);
     --purple:#7B7E9E;--purple-dim:rgba(123,126,158,0.10);
     --ease:cubic-bezier(0.22,1,0.36,1);
-    --font-display:'Space Grotesk',sans-serif;
-    --font-editorial:'Playfair Display',Georgia,serif;
+    --font-display:'DM Sans',sans-serif;
+    --font-editorial:'DM Sans',sans-serif;
     --font-body:'DM Sans',sans-serif;
     --font-mono:'JetBrains Mono',monospace;
     --amber:#F59E0B;--amber-dim:rgba(245,158,11,0.10);
@@ -61,7 +61,7 @@ body {
     overflow-x:hidden;
     position:relative;
     line-height:1.5;
-    font-size:13px;
+    font-size:14px;
 }
 
 /* Ambient elements removed — clean flat surfaces */
@@ -266,13 +266,13 @@ input,select { min-height:44px; }
     color:var(--text-3);
 }
 
-.zone { margin-top:28px; position:relative; }
+.zone { margin-top:24px; position:relative; }
 
 .zone-header {
     display:flex;
     align-items:center;
     justify-content:space-between;
-    margin-bottom:20px;
+    margin-bottom:14px;
 }
 
 .score-green { color:var(--green); }
@@ -293,39 +293,39 @@ input,select { min-height:44px; }
    ZONE 1: EDITORIAL MASTHEAD HERO
    ============================================================ */
 .hero-card {
-    margin-top:16px;
+    margin-top:12px;
     text-align:center;
     position:relative;
     overflow:hidden;
-    padding:24px 48px 0;
+    padding:16px 48px 0;
 }
 
 .hero-masthead {
     font-family:var(--font-editorial);
-    font-size:clamp(24px,3.5vw,42px);
-    font-weight:900;
+    font-size:clamp(20px,3vw,34px);
+    font-weight:600;
     color:#f5f5f0;
-    letter-spacing:0.04em;
+    letter-spacing:0.1em;
     line-height:1.1;
     text-transform:uppercase;
-    margin-bottom:4px;
+    margin-bottom:2px;
 }
 
 .hero-tagline {
     font-family:var(--font-editorial);
-    font-size:15px;
+    font-size:13px;
     font-weight:400;
-    font-style:italic;
+    font-style:normal;
     color:var(--text-3);
     letter-spacing:0.06em;
-    margin-bottom:20px;
+    margin-bottom:12px;
 }
 
 .hero-rule {
     border:none;
-    border-top:3px double rgba(255,255,255,0.08);
-    margin:0 auto 20px;
-    max-width:800px;
+    border-top:2px double rgba(255,255,255,0.08);
+    margin:0 auto 12px;
+    max-width:700px;
 }
 
 .hero-score-row {
@@ -333,30 +333,33 @@ input,select { min-height:44px; }
     align-items:baseline;
     justify-content:center;
     gap:16px;
-    margin-bottom:4px;
+    margin-bottom:2px;
 }
 
 .hero-score {
     font-family:var(--font-mono);
     font-weight:600;
-    font-size:clamp(48px,6vw,72px);
+    font-size:clamp(40px,5vw,56px);
     line-height:1;
-    color:var(--amber);
+    color:var(--accent);
     font-variant-numeric:tabular-nums;
 }
 
 .hero-score-label {
     font-family:var(--font-editorial);
-    font-size:13px;
-    font-style:italic;
+    font-size:12px;
+    font-style:normal;
     color:var(--text-3);
 }
 
 .hero-subtitle {
-    font-size:13px;
+    font-size:12px;
     color:var(--text-3);
-    margin-bottom:16px;
+    margin-bottom:8px;
 }
+
+.hero-chart { max-width:500px; margin:0 auto 4px; height:48px; }
+.hero-chart svg { width:100%; height:100%; }
 
 .ticker-line {
     display:flex;
@@ -369,29 +372,29 @@ input,select { min-height:44px; }
 
 .ticker-item { display:flex; align-items:baseline; gap:6px; }
 .ticker-name { font-family:var(--font-mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-3); }
-.ticker-score { font-family:var(--font-mono); font-size:15px; font-weight:600; color:var(--amber); font-variant-numeric:tabular-nums; }
+.ticker-score { font-family:var(--font-mono); font-size:15px; font-weight:600; color:var(--text); font-variant-numeric:tabular-nums; }
 .ticker-rank { font-family:var(--font-mono); font-size:9px; color:var(--text-3); }
 
 .hero-stats {
     display:grid;
     grid-template-columns:repeat(4,1fr);
     gap:1px;
-    background:var(--border);
-    margin-top:24px;
+    background:transparent;
+    margin-top:12px;
     border-radius:var(--radius);
     overflow:hidden;
 }
 
 .hero-stat {
     background:var(--surface);
-    padding:14px 16px;
+    padding:10px 16px;
     text-align:center;
 }
 
 .hero-stat-value {
     font-family:var(--font-display);
     font-weight:700;
-    font-size:24px;
+    font-size:20px;
     line-height:1.15;
     letter-spacing:-0.02em;
     color:var(--text);
@@ -399,11 +402,11 @@ input,select { min-height:44px; }
 
 .hero-stat-label {
     font-family:var(--font-mono);
-    font-size:10px;
+    font-size:9px;
     letter-spacing:0.06em;
     text-transform:uppercase;
     color:var(--text-3);
-    margin-top:4px;
+    margin-top:2px;
 }
 
 /* ============================================================
@@ -501,7 +504,7 @@ input,select { min-height:44px; }
 .bar-praise { background:var(--green); }
 .bar-bug { background:var(--red); }
 .bar-complaint { background:var(--red); }
-.bar-feature_request { background:var(--purple); }
+.bar-feature_request { background:var(--accent); }
 .bar-question { background:var(--accent); }
 
 /* ============================================================
@@ -587,9 +590,9 @@ input,select { min-height:44px; }
     background:var(--surface);
     border:1px solid var(--border);
     border-radius:var(--radius);
-    padding:16px 20px;
+    padding:12px 16px;
     display:flex;
-    gap:16px;
+    gap:12px;
     align-items:flex-start;
     position:relative;
     transition:border-color 0.15s var(--ease),background 0.15s var(--ease);
@@ -606,6 +609,8 @@ input,select { min-height:44px; }
     border-radius:var(--radius) 0 0 var(--radius);
     background:var(--border-strong) !important;
 }
+
+.feed-avatar { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); font-size:10px; font-weight:600; color:var(--text); flex-shrink:0; text-transform:uppercase; }
 
 .feed-item-body { flex:1; padding-left:8px; }
 
@@ -637,8 +642,8 @@ input,select { min-height:44px; }
 .cat-praise { background:var(--green-dim); color:var(--green); }
 .cat-bug { background:var(--red-dim); color:var(--red); }
 .cat-complaint { background:var(--red-dim); color:var(--red); }
-.cat-feature_request { background:var(--purple-dim); color:var(--purple); }
-.cat-question { background:var(--orange-dim); color:var(--orange); }
+.cat-feature_request { background:var(--accent-dim); color:var(--accent); }
+.cat-question { background:var(--accent-dim); color:var(--accent); }
 
 .priority-high { background:var(--surface-3); color:var(--text-2); font-weight:600; }
 .priority-medium { background:var(--surface-3); color:var(--text-3); }
@@ -655,8 +660,9 @@ input,select { min-height:44px; }
 }
 
 .pipeline-stat-card {
-    background:var(--surface);
+    background:var(--bg);
     border:1px solid var(--border);
+    border-color:var(--border-strong);
     border-radius:var(--radius);
     padding:14px 20px;
     text-align:center;
@@ -1635,7 +1641,7 @@ input,select { min-height:44px; }
     </div>
     <div class="status-right">
         <span class="demo-badge">TESTNET</span>
-        <button class="kbd-hint" onclick="openCommandPalette()" aria-label="Open command palette">Cmd+K</button>
+        <button class="kbd-hint" style="display:none" onclick="openCommandPalette()" aria-label="Open command palette">Cmd+K</button>
         <span class="sync-text" id="syncText">--</span>
     </div>
 </header>
@@ -1999,6 +2005,7 @@ function renderHero() {
                 <div class="hero-subtitle">Across ${c.total_projects} monitored projects on Sepolia</div>
             </div>
         </div>
+        <div class="hero-chart" id="heroChart"></div>
         <div class="hero-stats">
             <div class="hero-stat stagger-hero">
                 <div class="hero-stat-value" id="heroStatProjects">${c.total_projects}</div>
@@ -2023,6 +2030,24 @@ function renderHero() {
     countUp(document.getElementById('heroStatProjects'), c.total_projects, 600, '');
     countUp(document.getElementById('heroStatMentions'), c.total_mentions, 600, '');
     staggerAnimate('.stagger-hero', 60, 'fadeSlideUp');
+
+    // Hero trend chart from aggregated ranking trends
+    const heroChart = document.getElementById('heroChart');
+    if (heroChart && c.rankings) {
+        const allTrends = c.rankings.map(r => r.trend || []);
+        if (allTrends.length > 0) {
+            const maxLen = Math.max(...allTrends.map(h => h.length));
+            const avgScores = [];
+            for (let i = 0; i < maxLen; i++) {
+                let sum = 0, count = 0;
+                allTrends.forEach(h => { if (h[i] !== undefined) { sum += h[i]; count++; } });
+                if (count > 0) avgScores.push(sum / count);
+            }
+            if (avgScores.length >= 2) {
+                heroChart.innerHTML = renderSparklineSVG(avgScores, 600, 60, 'var(--accent)');
+            }
+        }
+    }
 }
 
 /* ── Zone 2: Project Comparison Grid ── */
@@ -2061,6 +2086,11 @@ function renderComparison() {
                 ${renderSparklineSVG(r.trend, 300, 40, scoreColor(r.score), '')}
             </div>
             <div class="project-card-bar">${barSegments}</div>
+            <div style="display:flex;gap:8px;font-family:var(--font-mono);font-size:10px;color:var(--text-3);margin-bottom:8px">
+                <span>${r.mentions || detail?.total_mentions || '\u2014'} mentions</span>
+                <span>\u00b7</span>
+                <span>${detail?.confidence || 'High'}</span>
+            </div>
             <div class="project-card-summary">${snippet}</div>
         </div>`;
     }).join('');
@@ -2136,16 +2166,16 @@ function renderFeed() {
     const sortOpts = sorts.map(s => `<option value="${s}" ${feedSortBy === s ? 'selected' : ''}>${capitalize(s)}</option>`).join('');
 
     const feedItems = allItems.slice(0, 40).map(item => {
-        const barColor = item.category === 'praise' ? 'var(--green)' : item.category === 'bug' ? 'var(--red)' : item.category === 'complaint' ? 'var(--red)' : item.category === 'feature_request' ? 'var(--purple)' : 'var(--accent)';
+        const barColor = item.category === 'praise' ? 'var(--green)' : item.category === 'bug' ? 'var(--red)' : item.category === 'complaint' ? 'var(--red)' : item.category === 'feature_request' ? 'var(--accent)' : 'var(--accent)';
         const catClass = 'cat-' + (item.category || 'praise');
         const priKey = (item.priority || 'low').toLowerCase();
         return `<div class="feed-item feed-stagger">
             <div class="feed-item-cat" style="background:${barColor}"></div>
+            <div class="feed-avatar" style="background:var(--accent-dim)">${(item.project || '?').charAt(0).toUpperCase()}</div>
             <div class="feed-item-body">
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
                     <span class="feed-item-badge ${catClass}">${catLabel(item.category)}</span>
                     <span class="feed-item-badge priority-${priKey}">${priKey}</span>
-                    <span style="font-family:var(--font-mono);font-size:10px;color:var(--accent);margin-left:auto">${capitalize(item.project || '')}</span>
                 </div>
                 <div class="feed-item-text">${item.text || ''}</div>
                 <div class="feed-item-meta">
@@ -2350,7 +2380,7 @@ async function openSlideOver(project) {
 
     const categories = [
         { key: 'praise', label: 'Praise', color: 'var(--green)' },
-        { key: 'feature_request', label: 'Features', color: 'var(--purple)' },
+        { key: 'feature_request', label: 'Features', color: 'var(--accent)' },
         { key: 'question', label: 'Questions', color: 'var(--orange)' },
         { key: 'bug', label: 'Bugs', color: 'var(--red)' },
         { key: 'complaint', label: 'Complaints', color: 'var(--red)' }
@@ -2371,7 +2401,7 @@ async function openSlideOver(project) {
     ).join('');
 
     const topSignals = (data.items || []).slice(0, 5).map(item => {
-        const catColor = item.category === 'praise' ? 'var(--green)' : item.category === 'bug' ? 'var(--red)' : item.category === 'complaint' ? 'var(--red)' : item.category === 'feature_request' ? 'var(--purple)' : 'var(--accent)';
+        const catColor = item.category === 'praise' ? 'var(--green)' : item.category === 'bug' ? 'var(--red)' : item.category === 'complaint' ? 'var(--red)' : item.category === 'feature_request' ? 'var(--accent)' : 'var(--accent)';
         const catBg = item.category === 'praise' ? 'var(--green-dim)' : item.category === 'bug' ? 'var(--red-dim)' : item.category === 'complaint' ? 'var(--red-dim)' : item.category === 'feature_request' ? 'var(--purple-dim)' : 'var(--orange-dim)';
         return `<div class="slide-feed-item">
             <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
@@ -2695,7 +2725,7 @@ function renderSignalFeed(name, detail) {
     }).join('');
 
     const feedItems = items.map(item => {
-        const barColor = item.category === 'praise' ? 'var(--green)' : item.category === 'bug' ? 'var(--red)' : item.category === 'complaint' ? 'var(--red)' : item.category === 'feature_request' ? 'var(--purple)' : 'var(--accent)';
+        const barColor = item.category === 'praise' ? 'var(--green)' : item.category === 'bug' ? 'var(--red)' : item.category === 'complaint' ? 'var(--red)' : item.category === 'feature_request' ? 'var(--accent)' : 'var(--accent)';
         const catClass = 'cat-' + (item.category || 'praise');
         const priKey = (item.priority || 'low').toLowerCase();
         return `<div class="feed-item sig-stagger">
