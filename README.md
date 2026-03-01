@@ -333,6 +333,7 @@ graph TD
 |---------|---------|----------|
 | Sepolia | `0xcA374e8bba8bd2BA0Aed26c4d425aA9aa7E058D0` | [Etherscan](https://sepolia.etherscan.io/address/0xcA374e8bba8bd2BA0Aed26c4d425aA9aa7E058D0) |
 | Base Sepolia | `0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE` | [Basescan](https://sepolia.basescan.org/address/0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE) |
+| Tenderly Virtual TestNet | `0x63e743Ec4FA388f7A3383ebE8873da2d38cB9cA5` | [Tenderly Explorer](https://dashboard.tenderly.co/explorer/vnet/6a003ec7-f6e4-492d-829b-29633c403657/transactions) |
 | CRE Forwarder | `0x15fC6ae953E024d975e77382eEeC56A9101f9F88` | -- |
 | Deployer | `0x043117bb026a4F8F4b3eC259511748208243B59a` | -- |
 

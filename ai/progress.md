@@ -16,13 +16,9 @@
 4. **Production CRE config** - workflow/config.production.json pointing at Render
 5. **README updated** with fresh tx hashes, on-chain scores table
 
-### IN PROGRESS
-- Tenderly Virtual TestNet deployment (needs user to create account + VirtualTestNet)
-- README final updates (Tenderly link + demo video link)
+6. **Tenderly Virtual TestNet** - Deployed at `0x63e743Ec4FA388f7A3383ebE8873da2d38cB9cA5`
 
 ### WHAT'S LEFT
-- [ ] Tenderly Virtual TestNet deployment (user creates account, shares RPC URL)
-- [ ] Update README with Tenderly link
 - [ ] Record demo video (<5 min)
 - [ ] Pre-submission testing
 - [ ] Submit to hackathon (Mar 8 deadline)
