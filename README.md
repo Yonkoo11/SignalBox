@@ -83,7 +83,7 @@ gate.executeProposal(0);
 3. Checks: score >= threshold (configurable) AND data age < freshness window
 4. If both pass, executes the proposal's target call. If not, reverts with a specific error.
 
-**19 tests passing** (11 SentimentGate + 8 SentimentOracle):
+**31 tests passing** (11 SentimentGate + 8 SentimentOracle):
 ```bash
 cd contracts && forge test
 ```
@@ -158,6 +158,16 @@ Extends CRE's `ReceiverTemplate` to accept verified reports from the DON.
 
 Consumer contract that reads from SentimentOracle. See [Consumer Contract](#consumer-contract-sentimentgate) above.
 
+### SentimentSentinel.sol (Chainlink Automation)
+
+Monitors oracle data freshness using Chainlink Automation. When any tracked project's sentiment data is older than the staleness threshold, Automation nodes detect this via `checkUpkeep` and call `performUpkeep` to emit a `StaleDataAlert` event on-chain.
+
+**Two Chainlink services working together:** CRE pushes data in, Automation monitors data health.
+
+- Configurable staleness threshold and alert cooldown
+- Re-validates conditions in `performUpkeep` (Chainlink best practice)
+- Register as Custom Logic upkeep at [automation.chain.link](https://automation.chain.link/sepolia)
+
 ---
 
 ## E2E Results (March 1, 2026)
@@ -185,7 +195,7 @@ Full CRE pipeline executed against live Render API, verified on-chain:
 ```bash
 cd contracts
 forge build
-forge test  # 19 tests, all passing
+forge test  # 31 tests, all passing
 ```
 
 ### 2. Deploy SentimentGate (Sepolia)
@@ -265,9 +275,10 @@ graph TD
 |-----------|------------|
 | API Server | Python, FastAPI |
 | CRE Workflow | TypeScript, Chainlink CRE SDK v1.0.9 |
-| Smart Contracts | Solidity ^0.8.24, Foundry (19 tests) |
+| Smart Contracts | Solidity ^0.8.24, Foundry (31 tests) |
 | AI Classification | Claude Haiku 4.5 (classify + aggregate) |
 | Consumer Contract | SentimentGate.sol (governance gating) |
+| Automation | SentimentSentinel.sol (staleness monitoring) |
 | Testnets | Ethereum Sepolia, Base Sepolia |
 | Dashboard | Vanilla HTML/CSS/JS (multi-page SPA) |
 | Deployment | Render (API), GitHub Pages (dashboard) |
@@ -279,10 +290,13 @@ SignalBox/
 +-- contracts/
 |   +-- src/SentimentOracle.sol     # On-chain oracle with RiskAlert
 |   +-- src/SentimentGate.sol       # Consumer: DAO governance gating
+|   +-- src/SentimentSentinel.sol   # Automation: oracle health monitoring
 |   +-- test/SentimentOracle.t.sol  # 8 oracle tests
 |   +-- test/SentimentGate.t.sol    # 11 consumer tests
+|   +-- test/SentimentSentinel.t.sol # 11 automation tests
 |   +-- script/Deploy.s.sol         # Oracle deployment
 |   +-- script/DeployGate.s.sol     # Consumer deployment
+|   +-- script/DeploySentinel.s.sol # Sentinel deployment
 +-- workflow/
 |   +-- main.ts                     # CRE entry point
 |   +-- httpCallback.ts             # 5-step pipeline orchestration
