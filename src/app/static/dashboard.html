@@ -1760,10 +1760,10 @@ input,select { min-height:44px; }
 </header>
 
 <nav class="nav-tabs" id="navTabs">
-    <button class="nav-tab active" data-route="#/" onclick="navigateTo('#/')">Overview</button>
-    <button class="nav-tab" data-route="#/signals" onclick="navigateTo('#/signals')">Signals</button>
-    <button class="nav-tab" data-route="#/pipeline" onclick="navigateTo('#/pipeline')">Pipeline</button>
-    <button class="nav-tab" data-route="#/oracle" onclick="navigateTo('#/oracle')">Oracle</button>
+    <button class="nav-tab active" data-section="overview" onclick="scrollToSection('overview')">Overview</button>
+    <button class="nav-tab" data-section="signals" onclick="scrollToSection('signals')">Signals</button>
+    <button class="nav-tab" data-section="pipeline" onclick="scrollToSection('pipeline')">Pipeline</button>
+    <button class="nav-tab" data-section="oracle" onclick="scrollToSection('oracle')">Oracle</button>
 </nav>
 
 <!-- SLIDE-OVER PANEL -->
@@ -1857,6 +1857,34 @@ function copyText(text) {
 function navigateTo(hash) {
     window.location.hash = hash;
 }
+
+function scrollToSection(sectionId) {
+    const el = document.getElementById('section-' + sectionId);
+    if (el) {
+        const navHeight = 88; // header + nav tabs
+        const y = el.getBoundingClientRect().top + window.pageYOffset - navHeight;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+    // Update active tab
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    const btn = document.querySelector(`.nav-tab[data-section="${sectionId}"]`);
+    if (btn) btn.classList.add('active');
+}
+
+// Scroll spy: highlight active nav tab based on scroll position
+function updateActiveTab() {
+    const sections = ['overview', 'signals', 'pipeline', 'oracle'];
+    const navHeight = 100;
+    let active = 'overview';
+    for (const id of sections) {
+        const el = document.getElementById('section-' + id);
+        if (el && el.getBoundingClientRect().top <= navHeight) active = id;
+    }
+    document.querySelectorAll('.nav-tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.section === active);
+    });
+}
+window.addEventListener('scroll', updateActiveTab, { passive: true });
 
 function catLabel(c) {
     return (c || '').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
@@ -2033,41 +2061,39 @@ function updateStatusBar() {
 function handleRoute() {
     const hash = window.location.hash.replace('#', '') || '/';
     const app = document.getElementById('app');
+    const navTabs = document.getElementById('navTabs');
 
     // Close slide-over on route change
     closeSlideOver();
 
-    // Update active tab
-    document.querySelectorAll('.nav-tab').forEach(tab => {
-        const route = tab.dataset.route;
-        tab.classList.toggle('active', route === '#' + hash || (hash === '/' && route === '#/'));
-    });
+    // Project detail and settings get their own page
+    if (hash.startsWith('/project/')) {
+        navTabs.style.display = 'none';
+        app.style.paddingTop = '48px';
+        app.style.opacity = '0';
+        setTimeout(() => {
+            renderProjectPage(hash.split('/project/')[1]);
+            app.style.opacity = '1';
+            window.scrollTo(0, 0);
+        }, 150);
+        return;
+    }
+    if (hash === '/settings') {
+        navTabs.style.display = 'none';
+        app.style.paddingTop = '48px';
+        app.style.opacity = '0';
+        setTimeout(() => {
+            renderSettingsPage();
+            app.style.opacity = '1';
+            window.scrollTo(0, 0);
+        }, 150);
+        return;
+    }
 
-    // Show/hide nav tabs (hide on project detail and settings)
-    const navTabs = document.getElementById('navTabs');
-    const isMainPage = ['/', '', '/signals', '/pipeline', '/oracle'].includes(hash);
-    navTabs.style.display = isMainPage ? 'flex' : 'none';
-    app.style.paddingTop = isMainPage ? '88px' : '48px';
-
-    app.style.opacity = '0';
-    setTimeout(() => {
-        if (hash === '/' || hash === '') renderOverviewPage();
-        else if (hash === '/signals') renderSignalsPage();
-        else if (hash === '/pipeline') renderPipelinePage();
-        else if (hash === '/oracle') renderOraclePage();
-        else if (hash.startsWith('/project/')) renderProjectPage(hash.split('/project/')[1]);
-        else if (hash === '/settings') renderSettingsPage();
-        else renderOverviewPage();
-        app.style.opacity = '1';
-        // Apply page enter animation
-        const container = app.querySelector('.page-container');
-        if (container) {
-            container.classList.remove('page-enter');
-            void container.offsetWidth; // force reflow to restart animation
-            container.classList.add('page-enter');
-        }
-        window.scrollTo(0, 0);
-    }, 150);
+    // Main page: show all sections scrollable
+    navTabs.style.display = 'flex';
+    app.style.paddingTop = '88px';
+    renderFullPage();
 }
 
 window.addEventListener('hashchange', handleRoute);
@@ -2088,61 +2114,40 @@ function pageFooterHTML() {
 }
 
 /* ============================================================
-   OVERVIEW PAGE (Hero + Projects)
+   FULL SCROLLABLE PAGE (all sections)
    ============================================================ */
-function renderOverviewPage() {
+function renderFullPage() {
     const app = document.getElementById('app');
-    app.innerHTML = `<div class="page-container">
-        <div id="heroZone"></div>
-        <div class="zone" id="comparisonZone"></div>
+    app.innerHTML = `<div class="page-container page-enter">
+        <!-- Overview section -->
+        <div id="section-overview">
+            <div id="heroZone"></div>
+            <div class="zone" id="comparisonZone"></div>
+        </div>
+        <!-- Signals section -->
+        <div id="section-signals" style="margin-top:32px">
+            <div id="themesZone"></div>
+            <div class="zone" id="feedZone"></div>
+        </div>
+        <!-- Pipeline section -->
+        <div id="section-pipeline" style="margin-top:32px">
+            <div id="pipelineZone"></div>
+        </div>
+        <!-- Oracle section -->
+        <div id="section-oracle" style="margin-top:32px">
+            <div id="oracleZone"></div>
+        </div>
         ${pageFooterHTML()}
     </div>`;
     renderHero();
     renderComparison();
-}
-
-/* ============================================================
-   SIGNALS PAGE (Themes + Feed)
-   ============================================================ */
-function renderSignalsPage() {
-    const app = document.getElementById('app');
-    app.innerHTML = `<div class="page-container">
-        <div id="themesZone" style="margin-top:16px"></div>
-        <div class="zone" id="feedZone"></div>
-        ${pageFooterHTML()}
-    </div>`;
     renderThemes();
     renderFeed();
-}
-
-/* ============================================================
-   PIPELINE PAGE
-   ============================================================ */
-function renderPipelinePage() {
-    const app = document.getElementById('app');
-    app.innerHTML = `<div class="page-container">
-        <div id="pipelineZone" style="margin-top:16px"></div>
-        ${pageFooterHTML()}
-    </div>`;
     renderPipeline();
-}
-
-/* ============================================================
-   ORACLE PAGE
-   ============================================================ */
-function renderOraclePage() {
-    const app = document.getElementById('app');
-    app.innerHTML = `<div class="page-container">
-        <div id="oracleZone" style="margin-top:16px"></div>
-        ${pageFooterHTML()}
-    </div>`;
     renderOracle();
 }
 
-/* ============================================================
-   HOME PAGE (legacy - redirects to overview)
-   ============================================================ */
-function renderHomePage() { renderOverviewPage(); }
+function renderHomePage() { renderFullPage(); }
 
 /* ── Zone 1: Editorial Masthead Hero ── */
 function renderHero() {
