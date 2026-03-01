@@ -4,7 +4,15 @@
 
 SignalBox aggregates Twitter/X feedback about crypto projects, classifies each item using AI, assesses risk, and publishes verified sentiment scores on-chain via Chainlink CRE. DAOs, prediction markets, and DeFi protocols can consume this data for governance, risk management, and community-driven decisions.
 
-**Chainlink Convergence Hackathon 2026 | CRE & AI Track**
+**Chainlink Convergence Hackathon 2026**
+
+| Track | Prize Pool |
+|-------|-----------|
+| CRE & AI | $33,500 |
+| Risk & Compliance | $32,000 |
+| Tenderly | $10,250 |
+
+> All CRE workflow, smart contract, and dashboard code was built during the hackathon period (Feb 6 - Mar 8, 2026). Git history proves this.
 
 ## How It Works
 
@@ -39,11 +47,12 @@ Twitter/X mentions
 
 ## Live Demo
 
+- **Dashboard**: [signalbox.onrender.com/dashboard](https://signalbox.onrender.com/dashboard) (first load may take ~30s)
+- **Demo Video**: _Coming soon_
 - **Sepolia Contract**: [`0xcA374e8bba8bd2BA0Aed26c4d425aA9aa7E058D0`](https://sepolia.etherscan.io/address/0xcA374e8bba8bd2BA0Aed26c4d425aA9aa7E058D0)
 - **Base Sepolia Contract**: [`0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE`](https://sepolia.basescan.org/address/0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE)
 - **E2E Transaction**: [`0x059d6b48...`](https://sepolia.etherscan.io/tx/0x059d6b487d511ab95f5d49806507b9b987219df99af6fe292924b2d9b50cd175)
 - **On-chain Score**: 82/100 for Chainlink on both chains (verified via `cast call`)
-- **Dashboard**: Run locally at `http://localhost:8000/proposals/proposal-hybrid.html`
 
 ## What Makes This Different
 
@@ -137,16 +146,17 @@ forge build
 forge test  # 8 tests, all passing
 ```
 
-### 2. API Server (staging mode)
+### 2. API Server + Dashboard
 
 ```bash
-pip install fastapi uvicorn
-python test_server.py
+cd src
+pip install -r requirements.txt
+DEMO_MODE=true python -m uvicorn app.main:app --port 8000
 # API: http://localhost:8000
-# Dashboard: http://localhost:8000/proposals/proposal-hybrid.html
+# Dashboard: http://localhost:8000/dashboard
 ```
 
-The staging server serves curated demo data with realistic timestamps, category breakdowns, and AI summaries for 5 monitored projects. All responses include `"mode": "staging"` to indicate demo data.
+In demo mode, the server serves curated data with realistic timestamps, category breakdowns, and AI summaries for 5 monitored projects. No external API keys needed. All responses include `"mode": "staging"` for transparency.
 
 ### 3. CRE Workflow Simulation
 
@@ -212,10 +222,14 @@ SignalBox/
 |   +-- workflow.yaml               # CRE config
 |   +-- config.staging.json         # Chain + contract config
 +-- src/app/
-|   +-- static/dashboard.html       # Demo dashboard (Mission Control design)
-+-- proposals/
-|   +-- proposal-hybrid.html        # Selected redesign (long-scroll + slide-over)
-+-- test_server.py                  # Staging API server (curated demo data)
+|   +-- main.py                     # FastAPI app (demo mode + production mode)
+|   +-- routers/demo.py             # Demo data router (curated staging data)
+|   +-- routers/sentiment.py        # Production sentiment API (DB-backed)
+|   +-- routers/auth.py             # X OAuth login
+|   +-- routers/feedback.py         # Feedback inbox API
+|   +-- services/                   # Twitter, classifier, alerts, Telegram
+|   +-- static/dashboard.html       # Sentiment dashboard
++-- render.yaml                     # Render deployment config
 ```
 
 ## API Endpoints
@@ -283,6 +297,36 @@ On-chain data verified:
 2. Reddit API (free) -- subreddit monitoring for technical discussions
 3. X API Basic ($100/month) -- direct tweet access when revenue justifies
 
+## Architecture Diagram
+
+```mermaid
+graph TD
+    A["Twitter/X Mentions"] --> B["SignalBox API<br/>(FastAPI)"]
+    B -->|"/api/v1/sentiment/{project}"| C["Chainlink CRE Workflow"]
+    C -->|"Step 1: HTTP Fetch"| B
+    C -->|"Step 2: Classify"| D["Claude AI"]
+    C -->|"Step 3: Aggregate"| D
+    C -->|"Step 4: Risk Check"| E{"Risk Flag?"}
+    E -->|"Yes"| F["RiskAlert Event"]
+    E -->|"No"| G["Step 5: Write EVM"]
+    F --> G
+    G --> H["SentimentOracle<br/>Sepolia"]
+    G --> I["SentimentOracle<br/>Base Sepolia"]
+    H --> J["DAOs, DeFi, Markets<br/>getSentiment()"]
+    I --> J
+```
+
+## Deployed Contracts
+
+| Network | Address | Explorer |
+|---------|---------|----------|
+| Sepolia | `0xcA374e8bba8bd2BA0Aed26c4d425aA9aa7E058D0` | [Etherscan](https://sepolia.etherscan.io/address/0xcA374e8bba8bd2BA0Aed26c4d425aA9aa7E058D0) |
+| Base Sepolia | `0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE` | [Basescan](https://sepolia.basescan.org/address/0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE) |
+| CRE Forwarder | `0x15fC6ae953E024d975e77382eEeC56A9101f9F88` | -- |
+| Deployer | `0x043117bb026a4F8F4b3eC259511748208243B59a` | -- |
+
 ## Built For
 
-Chainlink Convergence Hackathon 2026 -- CRE & AI Track
+Chainlink Convergence Hackathon 2026
+
+**Tracks:** CRE & AI ($33.5K) | Risk & Compliance ($32K) | Tenderly ($10.25K)
