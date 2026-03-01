@@ -1968,9 +1968,14 @@ function startTimer(seconds) {
 /* ============================================================
    DATA FETCHING
    ============================================================ */
+// Auto-detect: if served from GitHub Pages, use Render API; if served from Render, use relative URLs
+const API_BASE = window.location.hostname.includes('github.io')
+    ? 'https://signalbox-4bmb.onrender.com'
+    : '';
+
 async function fetchJSON(url) {
     try {
-        const res = await fetch(url);
+        const res = await fetch(API_BASE + url);
         if (!res.ok) throw new Error(res.status);
         return await res.json();
     } catch (e) {
