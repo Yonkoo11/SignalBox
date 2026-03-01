@@ -8,7 +8,7 @@ SignalBox is a novel oracle that captures what crypto communities actually think
 
 | Resource | Link |
 |----------|------|
-| Dashboard | [signalbox-4bmb.onrender.com/dashboard](https://signalbox-4bmb.onrender.com/dashboard) |
+| Dashboard | [yonkoo11.github.io/SignalBox](https://yonkoo11.github.io/SignalBox/) |
 | Demo Video | _Coming soon_ |
 | Sepolia Oracle | [`0xcA37...58D0`](https://sepolia.etherscan.io/address/0xcA374e8bba8bd2BA0Aed26c4d425aA9aa7E058D0) |
 | Base Sepolia Oracle | [`0x8e39...3AcE`](https://sepolia.basescan.org/address/0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE) |
