@@ -47,7 +47,7 @@ Twitter/X mentions
 
 ## Live Demo
 
-- **Dashboard**: [signalbox.onrender.com/dashboard](https://signalbox.onrender.com/dashboard) (first load may take ~30s)
+- **Dashboard**: [signalbox-4bmb.onrender.com/dashboard](https://signalbox-4bmb.onrender.com/dashboard) (first load may take ~30s)
 - **Demo Video**: _Coming soon_
 - **Sepolia Contract**: [`0xcA374e8bba8bd2BA0Aed26c4d425aA9aa7E058D0`](https://sepolia.etherscan.io/address/0xcA374e8bba8bd2BA0Aed26c4d425aA9aa7E058D0)
 - **Base Sepolia Contract**: [`0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE`](https://sepolia.basescan.org/address/0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE)
