@@ -64,7 +64,7 @@ body {
     font-size:15px;
 }
 
-/* Subtle ambient background glow */
+/* Static ambient background glow */
 body::before {
     content:'';
     position:fixed;
@@ -84,6 +84,19 @@ body::after {
     background:radial-gradient(ellipse, rgba(90,158,143,0.03) 0%, transparent 70%);
     pointer-events:none;
     z-index:0;
+}
+
+/* Interactive mouse-tracking glow */
+.mouse-glow {
+    position:fixed;
+    width:600px;height:600px;
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(224,116,58,0.06) 0%, transparent 70%);
+    pointer-events:none;
+    z-index:0;
+    transform:translate(-50%,-50%);
+    transition:left 0.3s ease-out, top 0.3s ease-out;
+    will-change:left,top;
 }
 
 a { color:inherit; text-decoration:none; }
@@ -407,11 +420,15 @@ input,select { min-height:44px; }
    ZONE 1: EDITORIAL MASTHEAD HERO
    ============================================================ */
 .hero-card {
-    margin-top:24px;
+    margin-top:0;
     text-align:center;
     position:relative;
     overflow:hidden;
     padding:32px 48px 0;
+    min-height:calc(100vh - 88px);
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
 }
 
 .hero-masthead {
@@ -432,7 +449,23 @@ input,select { min-height:44px; }
     font-style:normal;
     color:var(--text-2);
     letter-spacing:0.04em;
-    margin-bottom:24px;
+    margin-bottom:8px;
+}
+.hero-hook {
+    font-family:var(--font-body);
+    font-size:14px;
+    color:var(--text-3);
+    max-width:480px;
+    margin:0 auto 28px;
+    line-height:1.5;
+}
+.hero-sentiment-label {
+    font-family:var(--font-mono);
+    font-size:13px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    margin-top:4px;
+    margin-bottom:16px;
 }
 
 .hero-rule {
@@ -473,7 +506,7 @@ input,select { min-height:44px; }
     margin-bottom:20px;
 }
 
-.hero-chart { max-width:520px; margin:0 auto 12px; height:52px; }
+.hero-chart { max-width:640px; margin:0 auto 16px; height:72px; }
 .hero-chart svg { width:100%; height:100%; }
 
 .ticker-line {
@@ -486,8 +519,8 @@ input,select { min-height:44px; }
 }
 
 .ticker-item { display:flex; align-items:baseline; gap:6px; }
-.ticker-name { font-family:var(--font-mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-3); }
-.ticker-score { font-family:var(--font-mono); font-size:15px; font-weight:600; color:var(--text); font-variant-numeric:tabular-nums; }
+.ticker-name { font-family:var(--font-mono); font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-3); }
+.ticker-score { font-family:var(--font-mono); font-size:18px; font-weight:600; color:var(--text); font-variant-numeric:tabular-nums; }
 .ticker-rank { font-family:var(--font-mono); font-size:9px; color:var(--text-3); }
 
 .hero-stats {
@@ -1741,6 +1774,7 @@ input,select { min-height:44px; }
 
 <!-- NOISE TEXTURE OVERLAY -->
 <div class="noise-overlay" aria-hidden="true"></div>
+<div class="mouse-glow" id="mouseGlow" aria-hidden="true"></div>
 
 <!-- AMBIENT ATMOSPHERE -->
 <!-- ambient blobs removed -->
@@ -2170,14 +2204,20 @@ function renderHero() {
         return `<div class="ticker-item"><span class="ticker-name">${r.project}</span><span class="ticker-score score-${tc}">${r.score}</span></div>`;
     }).join('');
 
+    // Derive sentiment label from score
+    const sentimentLabel = c.avg_score >= 70 ? 'Healthy' : c.avg_score >= 45 ? 'Neutral' : 'At Risk';
+    const sentimentColor = c.avg_score >= 70 ? 'var(--green)' : c.avg_score >= 45 ? 'var(--text-2)' : 'var(--red)';
+
     el.innerHTML = `<div class="hero-card">
         <div class="hero-masthead">SignalBox</div>
         <div class="hero-tagline">The On-Chain Social Oracle</div>
+        <div class="hero-hook">Every oracle delivers price data. Nobody tells you what the community actually thinks.</div>
         <div class="hero-rule"></div>
         <div class="hero-score-row">
             <div>
                 <div class="hero-score-label">Global Sentiment Index</div>
                 <div class="hero-score" id="heroScoreNum">${c.avg_score}</div>
+                <div class="hero-sentiment-label" style="color:${sentimentColor}">${sentimentLabel}</div>
                 <div class="hero-subtitle">Across ${c.total_projects} monitored projects on Sepolia</div>
             </div>
         </div>
@@ -2220,7 +2260,7 @@ function renderHero() {
                 if (count > 0) avgScores.push(sum / count);
             }
             if (avgScores.length >= 2) {
-                heroChart.innerHTML = renderSparklineSVG(avgScores, 600, 60, 'var(--accent)');
+                heroChart.innerHTML = renderSparklineSVG(avgScores, 640, 72, 'var(--accent)');
             }
         }
     }
@@ -3188,6 +3228,18 @@ document.addEventListener('keydown', e => {
         if (slideOpen) closeSlideOver();
     }
 });
+
+/* ============================================================
+   INTERACTIVE MOUSE GLOW
+   ============================================================ */
+(function() {
+    const glow = document.getElementById('mouseGlow');
+    if (!glow) return;
+    document.addEventListener('mousemove', function(e) {
+        glow.style.left = e.clientX + 'px';
+        glow.style.top = e.clientY + 'px';
+    }, { passive: true });
+})();
 
 /* ============================================================
    INIT
