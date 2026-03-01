@@ -1589,7 +1589,10 @@ input,select { min-height:44px; }
    RESPONSIVE
    ============================================================ */
 @media (max-width: 1100px) {
-    .project-grid { grid-template-columns:repeat(3,1fr); }
+    .project-grid { grid-template-columns:repeat(2,1fr); }
+}
+@media (max-width: 640px) {
+    .project-grid { grid-template-columns:1fr; }
 }
 
 @media (max-width: 768px) {
