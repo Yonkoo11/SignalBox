@@ -21,8 +21,35 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     if DEMO_MODE:
-        logger.info("Running in DEMO MODE - no external services")
+        logger.info("Running in DEMO MODE")
+        # Start social collector if Reddit credentials are available
+        _scheduler = None
+        try:
+            from app.config import config
+            if config.REDDIT_CLIENT_ID and config.REDDIT_CLIENT_SECRET:
+                import asyncio
+                from apscheduler.schedulers.asyncio import AsyncIOScheduler
+                from apscheduler.triggers.interval import IntervalTrigger
+                from app.services.social_collector import collect_all_projects
+
+                logger.info("Reddit credentials found - starting live social collector")
+                _scheduler = AsyncIOScheduler()
+                _scheduler.add_job(
+                    collect_all_projects,
+                    trigger=IntervalTrigger(minutes=5),
+                    id="social_collector",
+                    replace_existing=True,
+                )
+                _scheduler.start()
+                # Run initial collection
+                asyncio.create_task(collect_all_projects())
+            else:
+                logger.info("No Reddit credentials - serving demo data only")
+        except Exception as e:
+            logger.warning(f"Social collector init failed: {e}")
         yield
+        if _scheduler:
+            _scheduler.shutdown()
         return
 
     # Production mode: initialize all services

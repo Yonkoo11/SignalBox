@@ -36,6 +36,11 @@ class Config:
     STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
     STRIPE_PRICE_ID = os.getenv("STRIPE_PRICE_ID")
 
+    # Reddit
+    REDDIT_CLIENT_ID = os.getenv("REDDIT_CLIENT_ID")
+    REDDIT_CLIENT_SECRET = os.getenv("REDDIT_CLIENT_SECRET")
+    REDDIT_USER_AGENT = os.getenv("REDDIT_USER_AGENT", "SignalBox/1.0")
+
     # Encryption
     ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY")
 
