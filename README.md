@@ -11,11 +11,9 @@ SignalBox is a novel oracle that captures what crypto communities actually think
 | Dashboard | [yonkoo11.github.io/SignalBox](https://yonkoo11.github.io/SignalBox/) |
 | Demo Video | _Coming soon_ |
 | Sepolia Oracle | [`0xcA37...58D0`](https://sepolia.etherscan.io/address/0xcA374e8bba8bd2BA0Aed26c4d425aA9aa7E058D0) |
-| Base Sepolia Oracle | [`0x8e39...3AcE`](https://sepolia.basescan.org/address/0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE) |
 | SentimentGate Consumer | [`0x63e7...9cA5`](https://sepolia.etherscan.io/address/0x63e743Ec4FA388f7A3383ebE8873da2d38cB9cA5) |
 | SentimentSentinel | [`0x6090...a19e`](https://sepolia.etherscan.io/address/0x6090633D3C8041B0555E3a6565A11898214ea19e) |
 | Automation Upkeep | [View Upkeep](https://automation.chain.link/sepolia/63951953480945797395994495867330998017254415204292776530584090000110353892946) |
-| Tenderly Virtual TestNet | [Explorer](https://dashboard.tenderly.co/explorer/vnet/6a003ec7-f6e4-492d-829b-29633c403657/transactions) |
 
 **Hackathon:** Chainlink Convergence 2026 | **Tracks:** CRE & AI ($33.5K) | Risk & Compliance ($32K) | Tenderly ($10.25K)
 
@@ -295,7 +293,7 @@ SignalBox/
 |   +-- src/SentimentSentinel.sol   # Automation: oracle health monitoring
 |   +-- test/SentimentOracle.t.sol  # 8 oracle tests
 |   +-- test/SentimentGate.t.sol    # 11 consumer tests
-|   +-- test/SentimentSentinel.t.sol # 11 automation tests
+|   +-- test/SentimentSentinel.t.sol # 12 automation tests
 |   +-- script/Deploy.s.sol         # Oracle deployment
 |   +-- script/DeployGate.s.sol     # Consumer deployment
 |   +-- script/DeploySentinel.s.sol # Sentinel deployment
@@ -329,12 +327,11 @@ SignalBox/
 | Network | Contract | Address |
 |---------|----------|---------|
 | Sepolia | SentimentOracle | [`0xcA374e8bba8bd2BA0Aed26c4d425aA9aa7E058D0`](https://sepolia.etherscan.io/address/0xcA374e8bba8bd2BA0Aed26c4d425aA9aa7E058D0) |
-| Base Sepolia | SentimentOracle | [`0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE`](https://sepolia.basescan.org/address/0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE) |
-| Tenderly VNet | SentimentOracle | [`0x63e743Ec4FA388f7A3383ebE8873da2d38cB9cA5`](https://dashboard.tenderly.co/explorer/vnet/6a003ec7-f6e4-492d-829b-29633c403657/transactions) |
 | Sepolia | SentimentGate | [`0x63e743Ec4FA388f7A3383ebE8873da2d38cB9cA5`](https://sepolia.etherscan.io/address/0x63e743Ec4FA388f7A3383ebE8873da2d38cB9cA5) |
 | Sepolia | SentimentSentinel | [`0x6090633D3C8041B0555E3a6565A11898214ea19e`](https://sepolia.etherscan.io/address/0x6090633D3C8041B0555E3a6565A11898214ea19e) |
 | Sepolia | Automation Upkeep | [View on Chainlink](https://automation.chain.link/sepolia/63951953480945797395994495867330998017254415204292776530584090000110353892946) |
 | Sepolia | CRE Forwarder | `0x15fC6ae953E024d975e77382eEeC56A9101f9F88` |
+| Base Sepolia | SentimentOracle | [`0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE`](https://sepolia.basescan.org/address/0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE) |
 
 ## Data Source Strategy
 

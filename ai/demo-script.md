@@ -24,7 +24,7 @@ cre workflow simulate . -T staging-settings --broadcast \
   --non-interactive --trigger-index 0 --http-payload '{"project":"chainlink"}'
 
 # 4. Browser tabs pre-loaded:
-#    Tab 1: https://signalbox-4bmb.onrender.com/dashboard (Overview page)
+#    Tab 1: https://yonkoo11.github.io/SignalBox/ (Overview page - faster than Render)
 #    Tab 2: https://sepolia.etherscan.io/address/0xcA374e8bba8bd2BA0Aed26c4d425aA9aa7E058D0
 
 # 5. Terminal: 18px font, dark theme, clean prompt (PS1="$ ")
@@ -50,7 +50,7 @@ cre workflow simulate . -T staging-settings --broadcast \
 
 ## SECTION 2: The Vision (0:15 - 0:45)
 
-**On screen:** Switch to the dashboard Overview page (https://signalbox-4bmb.onrender.com/dashboard)
+**On screen:** Switch to the dashboard Overview page (https://yonkoo11.github.io/SignalBox/)
 
 **Say:**
 
@@ -171,7 +171,7 @@ cast call 0xcA374e8bba8bd2BA0Aed26c4d425aA9aa7E058D0 \
 
 ## SECTION 5: Live Demo - Dashboard (3:00 - 3:45)
 
-**On screen:** Browser - dashboard at https://signalbox-4bmb.onrender.com/dashboard
+**On screen:** Browser - dashboard at https://yonkoo11.github.io/SignalBox/
 
 ### 5a. Overview page (15 seconds)
 
