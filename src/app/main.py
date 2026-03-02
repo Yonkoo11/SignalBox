@@ -114,18 +114,3 @@ async def health():
     return {"status": "healthy", "mode": "demo" if DEMO_MODE else "production"}
 
 
-if DEMO_MODE:
-    @app.get("/api/v1/collect")
-    async def trigger_collection():
-        """Manual trigger for social collection (debug endpoint)."""
-        from app.services.social_collector import collect_all_projects, social_store
-        try:
-            await collect_all_projects()
-            return {
-                "status": "ok",
-                "is_live": social_store.is_live,
-                "collections": social_store.collection_count,
-                "scores": {p: social_store.get_score(p) for p in ["chainlink", "aave", "base", "uniswap", "arbitrum"]},
-            }
-        except Exception as e:
-            return {"status": "error", "error": str(e)}

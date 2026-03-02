@@ -242,3 +242,19 @@ async def pipeline_status():
         "success_rate": 0.957,
         "is_live": social_store.is_live,
     }
+
+
+@router.get("/api/v1/collect")
+async def trigger_collection():
+    """Manual trigger for social collection (debug)."""
+    from app.services.social_collector import collect_all_projects
+    try:
+        await collect_all_projects()
+        return {
+            "status": "ok",
+            "is_live": social_store.is_live,
+            "collections": social_store.collection_count,
+            "scores": {p: social_store.get_score(p) for p in ["chainlink", "aave", "base", "uniswap", "arbitrum"]},
+        }
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
