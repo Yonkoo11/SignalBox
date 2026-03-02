@@ -1,5 +1,8 @@
 """Social data collector - orchestrates Reddit (+ future Twitter) fetching,
-classification, scoring, and in-memory storage for the demo API."""
+classification, scoring, and in-memory storage for the demo API.
+
+Uses Reddit's public JSON endpoints (no API key needed).
+"""
 
 import logging
 import threading
@@ -7,7 +10,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from app.services.classifier import classify_feedback, fallback_classify
-from app.services.reddit import get_reddit_client, fetch_project_signals
+from app.services.reddit import fetch_project_signals
 
 logger = logging.getLogger(__name__)
 
@@ -157,7 +160,7 @@ Write 2-3 sentences. Be specific about what people are saying. No marketing lang
         cat = s.get("category", "noise")
         cats[cat] = cats.get(cat, 0) + 1
 
-    top_cat = max(cats, key=cats.get) if cats else "noise"
+    top_cat = max(cats, key=lambda k: cats[k]) if cats else "noise"
     label = "positive" if score >= 70 else "mixed" if score >= 40 else "negative"
 
     return (
@@ -195,19 +198,14 @@ def _compute_priority(category: str, engagement: int) -> str:
 
 
 async def collect_all_projects():
-    """Main collection loop: fetch, classify, score, store for all projects."""
-    reddit = get_reddit_client()
-    if not reddit:
-        logger.info("No Reddit client available, skipping collection")
-        return
-
+    """Main collection loop: fetch from Reddit JSON, classify, score, store."""
     logger.info("Starting social collection for all projects...")
     social_store.increment_collection()
 
     for project in MONITORED_PROJECTS:
         try:
-            # Fetch from Reddit
-            raw_signals = fetch_project_signals(reddit, project, limit_per_sub=10)
+            # Fetch from Reddit (async, no API key needed)
+            raw_signals = await fetch_project_signals(project, limit_per_sub=8)
 
             if not raw_signals:
                 logger.info(f"No Reddit signals for {project}")
@@ -218,7 +216,7 @@ async def collect_all_projects():
             for signal in raw_signals:
                 try:
                     classified_signal = await classify_signal(signal)
-                    # Skip noise
+                    # Keep everything except high-confidence noise
                     if classified_signal["category"] != "noise" or classified_signal.get("confidence", 0) < 0.7:
                         classified.append(classified_signal)
                 except Exception as e:
