@@ -1,5 +1,5 @@
 {
-  "signalboxApiUrl": "http://localhost:8000",
+  "signalboxApiUrl": "https://signalbox-4bmb.onrender.com",
   "anthropicModel": "claude-haiku-4-5-20251001",
   "projects": ["chainlink", "uniswap", "aave", "base", "arbitrum"],
   "evms": [

@@ -18,14 +18,11 @@
     --accent:#E0743A;--accent-dim:rgba(224,116,58,0.10);
     --green:#5A9E8F;--green-dim:rgba(90,158,143,0.10);
     --red:#9E6B6B;--red-dim:rgba(158,107,107,0.10);
-    --orange:#9E8F6B;--orange-dim:rgba(158,143,107,0.10);
-    --purple:#7B7E9E;--purple-dim:rgba(123,126,158,0.10);
     --ease:cubic-bezier(0.22,1,0.36,1);
     --font-display:'DM Sans',sans-serif;
     --font-editorial:'DM Sans',sans-serif;
     --font-body:'DM Sans',sans-serif;
     --font-mono:'JetBrains Mono',monospace;
-    --amber:#F59E0B;--amber-dim:rgba(245,158,11,0.10);
     --radius:4px;
 }
 
@@ -403,10 +400,10 @@ input,select { min-height:44px; }
 }
 
 .score-green { color:var(--green); }
-.score-orange { color:var(--orange); }
+.score-orange { color:var(--accent); }
 .score-red { color:var(--red); }
 .score-bg-green { background:var(--green-dim); color:var(--green); }
-.score-bg-orange { background:var(--orange-dim); color:var(--orange); }
+.score-bg-orange { background:var(--accent-dim); color:var(--accent); }
 .score-bg-red { background:var(--red-dim); color:var(--red); }
 
 .skeleton-block {
@@ -534,10 +531,12 @@ input,select { min-height:44px; }
 }
 
 .hero-stat {
-    background:var(--surface);
+    background:transparent;
     padding:16px 20px;
     text-align:center;
+    border-left:1px solid var(--border);
 }
+.hero-stat:first-child { border-left:none; }
 
 .hero-stat-value {
     font-family:var(--font-display);
@@ -1785,10 +1784,9 @@ input,select { min-height:44px; }
         <span class="status-wordmark" onclick="navigateTo('#/')" role="button" tabindex="0">SignalBox</span>
         <span class="live-dot"></span>
         <span class="network-badge">Sepolia</span>
+        <span class="demo-badge">TESTNET</span>
     </div>
     <div class="status-right">
-        <span class="demo-badge">TESTNET</span>
-        <button class="kbd-hint" style="display:none" onclick="openCommandPalette()" aria-label="Open command palette">Cmd+K</button>
         <span class="sync-text" id="syncText">--</span>
     </div>
 </header>
@@ -1856,7 +1854,7 @@ function scoreColorClass(s) {
 
 function scoreColor(s) {
     if (s >= 70) return 'var(--green)';
-    if (s >= 40) return 'var(--orange)';
+    if (s >= 40) return 'var(--accent)';
     return 'var(--red)';
 }
 
@@ -2200,8 +2198,7 @@ function renderHero() {
     const nextSecs = nextIn % 60;
 
     const tickerItems = c.rankings.map(r => {
-        const tc = scoreColorClass(r.score);
-        return `<div class="ticker-item"><span class="ticker-name">${r.project}</span><span class="ticker-score score-${tc}">${r.score}</span></div>`;
+        return `<div class="ticker-item"><span class="ticker-name">${r.project}</span><span class="ticker-score">${r.score}</span></div>`;
     }).join('');
 
     // Derive sentiment label from score
@@ -2387,7 +2384,7 @@ function renderFeed() {
         const priKey = (item.priority || 'low').toLowerCase();
         return `<div class="feed-item feed-stagger">
             <div class="feed-item-cat" style="background:${barColor}"></div>
-            <div class="feed-avatar" style="background:var(--accent-dim)">${(item.project || '?').charAt(0).toUpperCase()}</div>
+            <div class="feed-avatar" style="background:${barColor}20">${(item.project || '?').charAt(0).toUpperCase()}</div>
             <div class="feed-item-body">
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
                     <span class="feed-item-badge ${catClass}">${catLabel(item.category)}</span>
@@ -2597,7 +2594,7 @@ async function openSlideOver(project) {
     const categories = [
         { key: 'praise', label: 'Praise', color: 'var(--green)' },
         { key: 'feature_request', label: 'Features', color: 'var(--accent)' },
-        { key: 'question', label: 'Questions', color: 'var(--orange)' },
+        { key: 'question', label: 'Questions', color: 'var(--accent)' },
         { key: 'bug', label: 'Bugs', color: 'var(--red)' },
         { key: 'complaint', label: 'Complaints', color: 'var(--red)' }
     ];
@@ -2618,7 +2615,7 @@ async function openSlideOver(project) {
 
     const topSignals = (data.items || []).slice(0, 5).map(item => {
         const catColor = item.category === 'praise' ? 'var(--green)' : item.category === 'bug' ? 'var(--red)' : item.category === 'complaint' ? 'var(--red)' : item.category === 'feature_request' ? 'var(--accent)' : 'var(--accent)';
-        const catBg = item.category === 'praise' ? 'var(--green-dim)' : item.category === 'bug' ? 'var(--red-dim)' : item.category === 'complaint' ? 'var(--red-dim)' : item.category === 'feature_request' ? 'var(--purple-dim)' : 'var(--orange-dim)';
+        const catBg = item.category === 'praise' ? 'var(--green-dim)' : item.category === 'bug' ? 'var(--red-dim)' : item.category === 'complaint' ? 'var(--red-dim)' : 'var(--accent-dim)';
         return `<div class="slide-feed-item">
             <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
                 <span class="feed-item-badge" style="background:${catBg};color:${catColor}">${catLabel(item.category)}</span>

@@ -12,7 +12,8 @@ SignalBox is a novel oracle that captures what crypto communities actually think
 | Demo Video | _Coming soon_ |
 | Sepolia Oracle | [`0xcA37...58D0`](https://sepolia.etherscan.io/address/0xcA374e8bba8bd2BA0Aed26c4d425aA9aa7E058D0) |
 | Base Sepolia Oracle | [`0x8e39...3AcE`](https://sepolia.basescan.org/address/0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE) |
-| SentimentGate Consumer | _Deploy with `forge script`_ |
+| SentimentGate Consumer | [`0x63e7...9cA5`](https://sepolia.etherscan.io/address/0x63e743Ec4FA388f7A3383ebE8873da2d38cB9cA5) |
+| SentimentSentinel | [`0x6090...a19e`](https://sepolia.etherscan.io/address/0x6090633D3C8041B0555E3a6565A11898214ea19e) |
 | Tenderly Virtual TestNet | [Explorer](https://dashboard.tenderly.co/explorer/vnet/6a003ec7-f6e4-492d-829b-29633c403657/transactions) |
 
 **Hackathon:** Chainlink Convergence 2026 | **Tracks:** CRE & AI ($33.5K) | Risk & Compliance ($32K) | Tenderly ($10.25K)
@@ -329,6 +330,8 @@ SignalBox/
 | Sepolia | SentimentOracle | [`0xcA374e8bba8bd2BA0Aed26c4d425aA9aa7E058D0`](https://sepolia.etherscan.io/address/0xcA374e8bba8bd2BA0Aed26c4d425aA9aa7E058D0) |
 | Base Sepolia | SentimentOracle | [`0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE`](https://sepolia.basescan.org/address/0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE) |
 | Tenderly VNet | SentimentOracle | [`0x63e743Ec4FA388f7A3383ebE8873da2d38cB9cA5`](https://dashboard.tenderly.co/explorer/vnet/6a003ec7-f6e4-492d-829b-29633c403657/transactions) |
+| Sepolia | SentimentGate | [`0x63e743Ec4FA388f7A3383ebE8873da2d38cB9cA5`](https://sepolia.etherscan.io/address/0x63e743Ec4FA388f7A3383ebE8873da2d38cB9cA5) |
+| Sepolia | SentimentSentinel | [`0x6090633D3C8041B0555E3a6565A11898214ea19e`](https://sepolia.etherscan.io/address/0x6090633D3C8041B0555E3a6565A11898214ea19e) |
 | Sepolia | CRE Forwarder | `0x15fC6ae953E024d975e77382eEeC56A9101f9F88` |
 
 ## Data Source Strategy

@@ -84,7 +84,7 @@ cre workflow simulate . -T staging-settings --broadcast \
 >
 > "Step four: if the risk flag triggers -- score below 40, majority bugs, or a high-priority security issue -- the workflow logs a risk alert."
 >
-> "Step five: the DON reaches consensus on the result, then writes the verified report to our SentimentOracle contract on Sepolia via `writeReport`. ABI-encoded, signed, on-chain."
+> "Step five: the DON uses `consensusIdenticalAggregation` to reach consensus, then the `EVMClient` writes the verified report to our SentimentOracle contract on Sepolia via `writeReport`. We use `Runtime.report()` to ABI-encode the data and `Runtime.getSecret()` to securely access API keys -- all standard CRE SDK capabilities."
 
 **Delivery tip:** Count the steps on your fingers or use the Pipeline page visuals. Keep it moving -- this is the most technical section, so don't linger. The judges know CRE; they want to see you *used* it properly, not that you can explain what an oracle is.
 
@@ -235,7 +235,7 @@ cd ~/Projects/SignalBox/contracts && forge test --summary
 
 **Say:**
 
-> "19 tests across both contracts -- 8 for the oracle, 11 for the gate. All green. The gate tests cover the happy path, stale data rejection, low sentiment blocking, cancellation, and threshold updates."
+> "31 tests across three contracts -- 8 for the oracle, 11 for the gate, and 12 for the sentinel. All green. The gate tests cover the happy path, stale data rejection, low sentiment blocking, cancellation, and threshold updates. The sentinel tests cover staleness detection, alert cooldowns, and multi-project monitoring."
 
 **Delivery tip:** Don't wait for compilation. Pre-build with `forge build` before recording. The `forge test --summary` output should be fast if already compiled. If it takes a few seconds, just let it run while you talk about the test coverage.
 
@@ -243,7 +243,21 @@ cd ~/Projects/SignalBox/contracts && forge test --summary
 
 ---
 
-## SECTION 7: What's Next (4:15 - 4:30)
+## SECTION 6b: Chainlink Automation - SentimentSentinel (4:15 - 4:35)
+
+**On screen:** Show SentimentSentinel.sol briefly, then Etherscan link
+
+**Say:**
+
+> "We don't just push data on-chain -- we monitor its health. SentimentSentinel uses Chainlink Automation to watch every tracked project's data freshness. If any project's sentiment data gets stale, Automation nodes detect it via checkUpkeep and emit a StaleDataAlert on-chain. Two Chainlink services working together: CRE pushes data in, Automation monitors the oracle's health."
+
+**Delivery tip:** This shows judges you used TWO Chainlink services, not just one. Emphasize the synergy.
+
+**Timing:** 20 seconds.
+
+---
+
+## SECTION 7: What's Next (4:35 - 4:50)
 
 **On screen:** Dashboard Overview or a simple slide/title card
 
@@ -268,10 +282,11 @@ cd ~/Projects/SignalBox/contracts && forge test --summary
 | 3. Architecture | 0:45 | 1:30 |
 | 4. CRE Workflow Demo | 1:30 | 3:00 |
 | 5. Dashboard Demo | 0:45 | 3:45 |
-| 6. Consumer Contract | 0:30 | 4:15 |
-| 7. What's Next | 0:15 | 4:30 |
+| 6a. Consumer Contract | 0:30 | 4:15 |
+| 6b. Sentinel/Automation | 0:20 | 4:35 |
+| 7. What's Next | 0:15 | 4:50 |
 
-**Total: ~4:30** (safe buffer under the 5:00 limit)
+**Total: ~4:50** (under the 5:00 limit)
 
 If you're running long, cut these first:
 1. Dashboard walkthrough -- drop Signals and Pipeline tabs, just show Overview + Oracle (saves 20s)
@@ -292,6 +307,7 @@ These are moments tailored to what each key judge values. Make sure you don't ac
 **Harry Papacharissiou (Head of DevRel)** -- wants real Chainlink integration, not toy usage
 - Beat: The 5-step CRE pipeline is real and runs end-to-end. Show the `writeReport` tx hash.
 - Beat: SentimentGate as a consumer contract shows downstream utility.
+- Beat: SentimentSentinel uses Chainlink Automation -- two Chainlink services in one project.
 - Beat: Two chains (Sepolia + Base Sepolia) shows cross-chain thinking.
 
 **Dave Isbitski (ex-Amazon Alexa)** -- values polished demos and storytelling
