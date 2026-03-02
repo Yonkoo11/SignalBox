@@ -1,46 +1,44 @@
 # SignalBox Progress
 
-## Current State: 5 deployed contracts, 31 tests, UI elevated, GitHub Pages live
+## Current State: Demo video frames captured, voiceover script finalized
 
-## Session: Mar 2, 2026 - Full Submission Readiness Push
+## Session: Mar 2, 2026 - Demo Video Production
 
 ### Done This Session
-- Dashboard UI elevation: removed --orange/--purple/--amber CSS vars, unified to --accent + --green + --red
-- Status bar simplified: TESTNET badge moved to left, Cmd+K removed
-- Ticker scores: white text (no color classes) for cleaner look
-- Hero stat cells: transparent bg with border separators (less visual layers)
-- Feed avatars: category-colored backgrounds instead of uniform accent
-- MIT LICENSE file added to project root
-- All 31 forge tests verified passing
-- .gitignore verified: .env ignored, .env.example tracked
-- GitHub Pages verified: 200 response
-- Render API verified: valid JSON responses
-- **SentimentGate deployed to Sepolia**: 0x63e743Ec4FA388f7A3383ebE8873da2d38cB9cA5 (verified on Etherscan)
-- **SentimentSentinel deployed to Sepolia**: 0x6090633D3C8041B0555E3a6565A11898214ea19e (verified on Etherscan)
-- README updated with all deployed contract addresses
-- Fixed .env line 1 malformed comment (stray "also" prefix)
+- All 8 demo video frames captured and saved to `ai/demo-frames/`:
+  - F1-hero.png: Dashboard overview with score 71, HEALTHY status, sparkline, stats
+  - F2-projects.png: 5 project cards (Chainlink 82, Aave 78, Base 71, Uniswap 65, Arbitrum 58)
+  - F3-signals.png: Live Signals feed with PRAISE/COMPLAINT tags, filters, 32 signals
+  - F4-pipeline.png: CRE Pipeline stats (95.7%), 5-step visualization, run history table
+  - F5-oracle.png: On-Chain Oracle section with contract address, DON nodes, submissions
+  - F6-etherscan-verified.png: Green "Verified" badge on Etherscan, source code visible
+  - F7-etherscan-tx.png: Decoded SentimentUpdated event (score 62, AI summary for Arbitrum)
+  - F8-automation.png: Chainlink Automation upkeep (Active, LINK balance)
+- Voiceover script updated in `ai/demo-video-script.md` to match actual frame content
+- F7 voiceover corrected: was "score 82 Chainlink", now "score 62 Arbitrum" to match screenshot
 
-### Five Deployed Contracts
-1. SentimentOracle (Sepolia): 0xcA374e8bba8bd2BA0Aed26c4d425aA9aa7E058D0
-2. SentimentOracle (Base Sepolia): 0x8e39631FBfAB68Ff5739F576847Ba7795f5b3AcE
-3. SentimentOracle (Tenderly VNet): 0x63e743Ec4FA388f7A3383ebE8873da2d38cB9cA5
-4. SentimentGate (Sepolia): 0x63e743Ec4FA388f7A3383ebE8873da2d38cB9cA5
-5. SentimentSentinel (Sepolia): 0x6090633D3C8041B0555E3a6565A11898214ea19e
+### Remaining Tasks (USER action)
+1. Generate ElevenLabs voiceover from `ai/demo-video-script.md` script
+   - Voice: "Daniel" (British, calm) or "Josh" (American, natural)
+   - Settings: Multilingual v2, Stability 0.50, Similarity 0.75, Speed 1.0x
+2. Assemble video in CapCut/DaVinci:
+   - Import 8 frames + voiceover audio
+   - Match each frame to timing table in script
+   - Crossfade transitions (300ms)
+   - 2s intro/outro black screens with text
+   - Optional: subtle Ken Burns zoom (2%)
+   - Export: 1920x1080, H.264, 30fps
+3. Upload to YouTube (unlisted) or Loom
+4. Update README line 12: "Coming soon" -> actual video URL
+5. Submit on Devpost
 
-### Remaining Tasks
-- [#17] Run CRE workflow for all 5 projects (data is 16+ days stale)
-- [#17] Create test proposal on SentimentGate for Etherscan visibility
-- [#18] Populate Tenderly VNet with CRE transactions
-- [#19] Fix demo script: test count 19->31, add SentimentSentinel, CRE capabilities
-- Register Sentinel as Chainlink Automation upkeep (needs LINK from faucet)
-- [#5] Record and upload demo video (USER must do)
-- [#6/#14] Pre-submission checklist + Devpost submit
-- Push all changes to GitHub
+### Key Files
+- `ai/demo-video-script.md` - Full voiceover script with frame alignment + assembly instructions
+- `ai/demo-frames/` - 8 PNG frames (1280x800)
+- `ai/demo-script.md` - Backup: longer 4:50 live recording script (if needed)
 
 ### Key URLs
 - GitHub Pages: https://yonkoo11.github.io/SignalBox/
 - Render API: https://signalbox-4bmb.onrender.com
 - GitHub: https://github.com/Yonkoo11/SignalBox
-- Gate (Sepolia): https://sepolia.etherscan.io/address/0x63e743Ec4FA388f7A3383ebE8873da2d38cB9cA5
-- Sentinel (Sepolia): https://sepolia.etherscan.io/address/0x6090633D3C8041B0555E3a6565A11898214ea19e
-- Tenderly: https://dashboard.tenderly.co/explorer/vnet/6a003ec7-f6e4-492d-829b-29633c403657/transactions
+- Automation Upkeep: https://automation.chain.link/sepolia/63951953480945797395994495867330998017254415204292776530584090000110353892946
