@@ -67,6 +67,25 @@ def _parse_post(post_data: dict) -> Optional[dict]:
     if data.get("stickied"):
         return None
 
+    # Skip daily/weekly discussion megathreads and meta posts
+    title_lower = (data.get("title") or "").lower()
+    noise_patterns = [
+        "daily crypto discussion",
+        "daily discussion",
+        "weekly discussion",
+        "daily general discussion",
+        "daily altcoin",
+        "monthly skeptics",
+        "monthly optimists",
+        "welcome to",
+        "rules and guidelines",
+        "megathread",
+        "meta thread",
+    ]
+    if any(pat in title_lower for pat in noise_patterns):
+        return None
+
+    # Skip very short posts (low signal)
     title = data.get("title", "")
     body = (data.get("selftext") or "")[:300]
     text = title
@@ -80,6 +99,10 @@ def _parse_post(post_data: dict) -> Optional[dict]:
     score = data.get("score", 0)
     num_comments = data.get("num_comments", 0)
     created_utc = data.get("created_utc", 0)
+
+    # Skip very short titles (usually just links with no context)
+    if len(title.strip()) < 15:
+        return None
 
     return {
         "text": text[:500],

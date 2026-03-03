@@ -797,6 +797,54 @@ input,select { min-height:44px; }
 .priority-medium { background:var(--surface-3); color:var(--text-3); }
 .priority-low { background:var(--surface-3); color:var(--text-3); }
 
+.source-badge {
+    font-family:var(--font-mono);
+    font-size:10px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    padding:1px 6px;
+    border-radius:var(--radius);
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+}
+.source-reddit { background:rgba(255,69,0,0.10); color:#FF6B3A; }
+.source-twitter { background:rgba(29,155,240,0.10); color:#5DA3D9; }
+
+/* Cold start loading banner */
+.cold-start-banner {
+    position:fixed;
+    top:0;left:0;right:0;
+    z-index:9999;
+    background:var(--accent);
+    color:var(--text-on-accent);
+    padding:8px 16px;
+    text-align:center;
+    font-family:var(--font-mono);
+    font-size:13px;
+    font-weight:500;
+    transition:transform 0.4s var(--ease), opacity 0.4s var(--ease);
+}
+.cold-start-banner.hidden {
+    transform:translateY(-100%);
+    opacity:0;
+    pointer-events:none;
+}
+.cold-start-inner {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+}
+.cold-start-spinner {
+    width:14px;height:14px;
+    border:2px solid rgba(255,255,255,0.3);
+    border-top-color:#fff;
+    border-radius:50%;
+    animation:spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+
 /* ============================================================
    ZONE 5: CRE PIPELINE
    ============================================================ */
@@ -1775,6 +1823,14 @@ input,select { min-height:44px; }
 <div class="noise-overlay" aria-hidden="true"></div>
 <div class="mouse-glow" id="mouseGlow" aria-hidden="true"></div>
 
+<!-- COLD START LOADING BANNER -->
+<div id="coldStartBanner" class="cold-start-banner">
+    <div class="cold-start-inner">
+        <div class="cold-start-spinner"></div>
+        <span>Waking up server... first load takes ~30s</span>
+    </div>
+</div>
+
 <!-- AMBIENT ATMOSPHERE -->
 <!-- ambient blobs removed -->
 
@@ -2066,6 +2122,9 @@ async function loadAllData() {
     }
 
     STATE.loaded = true;
+    // Hide cold start banner
+    const banner = document.getElementById('coldStartBanner');
+    if (banner) banner.classList.add('hidden');
     updateStatusBar();
 }
 
@@ -2195,8 +2254,8 @@ function renderHero() {
     const score = c ? c.avg_score : '--';
     const totalProjects = c ? c.total_projects : '--';
     const totalMentions = c ? c.total_mentions : '--';
-    const sentimentLabel = c ? (c.avg_score >= 70 ? 'Healthy' : c.avg_score >= 45 ? 'Neutral' : 'At Risk') : 'Loading';
-    const sentimentColor = c ? (c.avg_score >= 70 ? 'var(--green)' : c.avg_score >= 45 ? 'var(--text-2)' : 'var(--red)') : 'var(--text-3)';
+    const sentimentLabel = c ? (c.avg_score >= 70 ? 'Healthy' : c.avg_score >= 45 ? 'Neutral' : 'At Risk') : 'Connecting';
+    const sentimentColor = c ? (c.avg_score >= 70 ? 'var(--green)' : c.avg_score >= 45 ? 'var(--text-2)' : 'var(--red)') : 'var(--accent)';
 
     const defaultTicker = ['chainlink','aave','base','uniswap','arbitrum'];
     const tickerItems = c
@@ -2397,6 +2456,7 @@ function renderFeed() {
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
                     <span class="feed-item-badge ${catClass}">${catLabel(item.category)}</span>
                     <span class="feed-item-badge priority-${priKey}">${priKey}</span>
+                    ${item.source === 'reddit' ? '<span class="source-badge source-reddit">Reddit</span>' : item.source === 'twitter' ? '<span class="source-badge source-twitter">Twitter</span>' : ''}
                 </div>
                 <div class="feed-item-text">${item.text || ''}</div>
                 <div class="feed-item-meta">
@@ -2627,6 +2687,7 @@ async function openSlideOver(project) {
         return `<div class="slide-feed-item">
             <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
                 <span class="feed-item-badge" style="background:${catBg};color:${catColor}">${catLabel(item.category)}</span>
+                ${item.source === 'reddit' ? '<span class="source-badge source-reddit">Reddit</span>' : item.source === 'twitter' ? '<span class="source-badge source-twitter">Twitter</span>' : ''}
             </div>
             <div style="font-size:14px;color:var(--text-2);line-height:1.6;margin-bottom:4px">${item.text || ''}</div>
             <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-3);display:flex;gap:12px">
@@ -2663,7 +2724,7 @@ async function openSlideOver(project) {
             <div class="slide-ai-label">AI Analysis</div>
             <div class="slide-ai-text">${data.ai_summary || 'No analysis available.'}</div>
             <div class="slide-ai-meta">
-                <span class="slide-ai-meta-item">Source: <span>Social + Forums</span></span>
+                <span class="slide-ai-meta-item">Source: <span>Reddit + Twitter</span></span>
                 <span class="slide-ai-meta-item">Mentions: <span>${data.total_mentions || 0}</span></span>
                 <span class="slide-ai-meta-item">Confidence: <span>High</span></span>
                 <span class="slide-ai-meta-item">Model: <span>Claude Haiku 4.5</span></span>
@@ -2955,6 +3016,7 @@ function renderSignalFeed(name, detail) {
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
                     <span class="feed-item-badge ${catClass}">${catLabel(item.category)}</span>
                     <span class="feed-item-badge priority-${priKey}">${priKey}</span>
+                    ${item.source === 'reddit' ? '<span class="source-badge source-reddit">Reddit</span>' : item.source === 'twitter' ? '<span class="source-badge source-twitter">Twitter</span>' : ''}
                 </div>
                 <div class="feed-item-text">${item.text || ''}</div>
                 <div class="feed-item-meta">
